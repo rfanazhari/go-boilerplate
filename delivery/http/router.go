@@ -14,6 +14,10 @@ import (
 
 type Server struct {
 	Handler TaskHandler
+	Login   LoginHandler
+	Account AccountHandler
+	Profile ProfileHandler
+	Auth    Auth
 	Bundle  *goi18n.Bundle
 	Log     *logmanager.Application
 }
@@ -22,6 +26,9 @@ func (s Server) Router() http.Handler {
 	router := mux.NewRouter()
 	router.Use(lmgorilla.Middleware(s.Log))
 	router.HandleFunc("/health", s.health).Methods(http.MethodGet)
+	router.HandleFunc("/login", s.Login.Login).Methods(http.MethodPost)
+	router.HandleFunc("/accounts", s.Account.Create).Methods(http.MethodPost)
+	router.HandleFunc("/profile", s.Profile.Update).Methods(http.MethodPatch)
 	router.HandleFunc("/tasks", s.Handler.Create).Methods(http.MethodPost)
 	router.HandleFunc("/tasks/{id}/start", s.Handler.Start).Methods(http.MethodPost)
 	router.HandleFunc("/tasks/{id}/complete", s.Handler.Complete).Methods(http.MethodPost)

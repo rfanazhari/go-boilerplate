@@ -21,6 +21,7 @@ const (
 	CodeLastAdmin          = "LAST_ADMIN"
 	CodeInvalidCredentials = "INVALID_CREDENTIALS"
 	CodeUnauthenticated    = "UNAUTHENTICATED"
+	CodeForbidden          = "FORBIDDEN"
 )
 
 const (
@@ -30,6 +31,7 @@ const (
 	KindUnavailable
 	KindInternal
 	KindUnauthenticated
+	KindForbidden
 )
 
 type Kind int
