@@ -20,10 +20,12 @@ var (
 	errCannotStart    = errors.New("task can be started only from todo")
 	errCannotComplete = errors.New("task can be completed only from in progress")
 	errTaskFinal      = errors.New("done task cannot be modified")
+	errMissingOwner   = errors.New("owner id is required")
 )
 
 type Task struct {
 	id          uuid.UUID
+	ownerID     uuid.UUID
 	title       string
 	status      enum.Status
 	dueDate     *time.Time
@@ -43,7 +45,10 @@ func cloneTime(value *time.Time) *time.Time {
 	return &copied
 }
 
-func NewTask(id uuid.UUID, title string, dueDate *time.Time, now time.Time) (*Task, error) {
+func NewTask(id uuid.UUID, ownerID uuid.UUID, title string, dueDate *time.Time, now time.Time) (*Task, error) {
+	if ownerID == uuid.Nil {
+		return nil, errs.New(errs.CodeValidationFailed, errs.KindInvalidInput, errMissingOwner)
+	}
 	trimmed := strings.TrimSpace(title)
 	if trimmed == "" {
 		return nil, errs.New(errs.CodeInvalidTitle, errs.KindInvalidInput, errEmptyTitle)
@@ -58,6 +63,7 @@ func NewTask(id uuid.UUID, title string, dueDate *time.Time, now time.Time) (*Ta
 	}
 	return &Task{
 		id:        id,
+		ownerID:   ownerID,
 		title:     trimmed,
 		status:    enum.Todo,
 		dueDate:   normalizedDue,
@@ -65,9 +71,10 @@ func NewTask(id uuid.UUID, title string, dueDate *time.Time, now time.Time) (*Ta
 	}, nil
 }
 
-func RestoreTask(id uuid.UUID, title string, status enum.Status, dueDate *time.Time, createdAt time.Time, completedAt *time.Time) *Task {
+func RestoreTask(id uuid.UUID, ownerID uuid.UUID, title string, status enum.Status, dueDate *time.Time, createdAt time.Time, completedAt *time.Time) *Task {
 	return &Task{
 		id:          id,
+		ownerID:     ownerID,
 		title:       title,
 		status:      status,
 		dueDate:     cloneTime(dueDate),
@@ -89,6 +96,10 @@ func validateDueDate(dueDate *time.Time, now time.Time) (*time.Time, error) {
 
 func (t *Task) ID() uuid.UUID {
 	return t.id
+}
+
+func (t *Task) OwnerID() uuid.UUID {
+	return t.ownerID
 }
 
 func (t *Task) Title() string {

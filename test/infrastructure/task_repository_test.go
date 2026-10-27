@@ -33,7 +33,7 @@ func TestPostgresTaskRepository(t *testing.T) {
 		t.Skip(err.Error())
 	}
 	repo := taskrepository.Postgres{Pool: pool}
-	task, err := aggregate.NewTask(uuid.New(), testdata.TitlePrepareReport(), nil, testdata.Instant())
+	task, err := aggregate.NewTask(uuid.New(), uuid.MustParse("e0000000-0000-4000-8000-000000000001"), testdata.TitlePrepareReport(), nil, testdata.Instant())
 	require.NoError(t, err)
 	require.NoError(t, repo.Save(ctx, task))
 	got, err := repo.Get(ctx, task.ID())

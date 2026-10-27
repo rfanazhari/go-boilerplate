@@ -23,7 +23,7 @@ func (m *Memory) ensure() {
 }
 
 func (m *Memory) clone(task *aggregate.Task) *aggregate.Task {
-	return aggregate.RestoreTask(task.ID(), task.Title(), task.Status(), task.DueDate(), task.CreatedAt(), task.CompletedAt())
+	return aggregate.RestoreTask(task.ID(), task.OwnerID(), task.Title(), task.Status(), task.DueDate(), task.CreatedAt(), task.CompletedAt())
 }
 
 func (m *Memory) Get(_ context.Context, id uuid.UUID) (*aggregate.Task, error) {

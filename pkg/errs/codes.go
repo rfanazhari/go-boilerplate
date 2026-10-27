@@ -1,18 +1,27 @@
 package errs
 
 const (
-	CodeInvalidTitle      = "INVALID_TITLE"
-	CodeInvalidDueDate    = "INVALID_DUE_DATE"
-	CodeInvalidIdentifier = "INVALID_IDENTIFIER"
-	CodeValidationFailed  = "VALIDATION_FAILED"
-	CodeMalformedRequest  = "MALFORMED_REQUEST"
-	CodeTaskNotFound      = "TASK_NOT_FOUND"
-	CodeRouteNotFound     = "ROUTE_NOT_FOUND"
-	CodeMethodNotAllowed  = "METHOD_NOT_ALLOWED"
-	CodeInvalidTransition = "INVALID_TRANSITION"
-	CodeTaskFinal         = "TASK_FINAL"
-	CodeEventUnavailable  = "EVENT_UNAVAILABLE"
-	CodeInternalError     = "INTERNAL_ERROR"
+	CodeInvalidTitle       = "INVALID_TITLE"
+	CodeInvalidDueDate     = "INVALID_DUE_DATE"
+	CodeInvalidIdentifier  = "INVALID_IDENTIFIER"
+	CodeValidationFailed   = "VALIDATION_FAILED"
+	CodeMalformedRequest   = "MALFORMED_REQUEST"
+	CodeTaskNotFound       = "TASK_NOT_FOUND"
+	CodeRouteNotFound      = "ROUTE_NOT_FOUND"
+	CodeMethodNotAllowed   = "METHOD_NOT_ALLOWED"
+	CodeInvalidTransition  = "INVALID_TRANSITION"
+	CodeTaskFinal          = "TASK_FINAL"
+	CodeEventUnavailable   = "EVENT_UNAVAILABLE"
+	CodeInternalError      = "INTERNAL_ERROR"
+	CodeInvalidRole        = "INVALID_ROLE"
+	CodeInvalidStatus      = "INVALID_STATUS"
+	CodeInvalidPassword    = "INVALID_PASSWORD"
+	CodeAccountNotFound    = "ACCOUNT_NOT_FOUND"
+	CodeEmailTaken         = "EMAIL_TAKEN"
+	CodeLastAdmin          = "LAST_ADMIN"
+	CodeInvalidCredentials = "INVALID_CREDENTIALS"
+	CodeUnauthenticated    = "UNAUTHENTICATED"
+	CodeForbidden          = "FORBIDDEN"
 )
 
 const (
@@ -21,6 +30,8 @@ const (
 	KindConflict
 	KindUnavailable
 	KindInternal
+	KindUnauthenticated
+	KindForbidden
 )
 
 type Kind int

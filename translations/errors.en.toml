@@ -33,3 +33,30 @@ other = "the completion event could not be accepted"
 
 [INTERNAL_ERROR]
 other = "an unexpected error occurred"
+
+[INVALID_ROLE]
+other = "account role must be admin or user"
+
+[INVALID_STATUS]
+other = "account status transition is not allowed"
+
+[INVALID_PASSWORD]
+other = "password is invalid"
+
+[ACCOUNT_NOT_FOUND]
+other = "account was not found"
+
+[EMAIL_TAKEN]
+other = "email is already in use"
+
+[LAST_ADMIN]
+other = "this operation would remove the last admin account"
+
+[INVALID_CREDENTIALS]
+other = "email or password is incorrect"
+
+[UNAUTHENTICATED]
+other = "authentication is required"
+
+[FORBIDDEN]
+other = "you are not allowed to perform this action"

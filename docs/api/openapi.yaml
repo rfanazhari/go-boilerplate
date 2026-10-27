@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: taskdemo Task Tracking API
-  version: 1.0.0
-  description: HTTP JSON contract for the Task Tracking reference feature.
+  version: 1.1.0
+  description: HTTP JSON contract for the Task Tracking reference feature with accounts and Bearer authentication.
 servers:
   - url: http://127.0.0.1:8080
 paths:
@@ -17,9 +17,124 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessEmpty"
+  /login:
+    post:
+      summary: Issue an opaque Bearer token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Login"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessLogin"
+        "401":
+          $ref: "#/components/responses/Error"
+        "400":
+          $ref: "#/components/responses/Error"
+  /profile:
+    patch:
+      summary: Update the caller profile (user role)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfile"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessAccount"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /accounts:
+    post:
+      summary: Create an account (admin role)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccount"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessAccount"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /accounts/{id}/status:
+    patch:
+      summary: Activate or deactivate an account (admin role)
+      parameters:
+        - $ref: "#/components/parameters/AccountID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetAccountStatus"
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessAccount"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /accounts/{id}:
+    delete:
+      summary: Soft-delete an account (admin role)
+      parameters:
+        - $ref: "#/components/parameters/AccountID"
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEmpty"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
   /tasks:
     post:
-      summary: Create a task
+      summary: Create a task (user role)
       requestBody:
         required: true
         content:
@@ -35,6 +150,10 @@ paths:
                 $ref: "#/components/schemas/SuccessTask"
         "400":
           $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
   /tasks/{id}:
     get:
       summary: Get task details
@@ -48,6 +167,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessTask"
         "400":
+          $ref: "#/components/responses/Error"
+        "401":
           $ref: "#/components/responses/Error"
         "404":
           $ref: "#/components/responses/Error"
@@ -63,6 +184,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessTask"
+        "401":
+          $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"
   /tasks/{id}/complete:
@@ -77,6 +200,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessTask"
+        "401":
+          $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"
         "503":
@@ -101,9 +226,16 @@ paths:
                 $ref: "#/components/schemas/SuccessTask"
         "400":
           $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
   parameters:
     TaskID:
       name: id
@@ -112,7 +244,75 @@ components:
       schema:
         type: string
         format: uuid
+    AccountID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
   schemas:
+    Login:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    CreateAccount:
+      type: object
+      additionalProperties: false
+      required: [email, name, password, role]
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [admin, user]
+    SetAccountStatus:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [active, non_active]
+    UpdateProfile:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        password:
+          type: string
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, user]
+        status:
+          type: string
+          enum: [active, non_active]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     CreateTask:
       type: object
       additionalProperties: false
@@ -139,6 +339,10 @@ components:
         id:
           type: string
           format: uuid
+        ownerId:
+          type: string
+          format: uuid
+          readOnly: true
         title:
           type: string
         status:
@@ -157,6 +361,28 @@ components:
           type: string
           format: date-time
           nullable: true
+    SuccessLogin:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          const: success
+        data:
+          type: object
+          required: [token, tokenType]
+          properties:
+            token:
+              type: string
+            tokenType:
+              const: Bearer
+    SuccessAccount:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          const: success
+        data:
+          $ref: "#/components/schemas/Account"
     SuccessTask:
       type: object
       required: [status, data]
@@ -205,3 +431,5 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorEnvelope"
+security:
+  - bearerAuth: []

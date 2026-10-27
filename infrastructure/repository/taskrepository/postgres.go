@@ -53,15 +53,15 @@ func (r Postgres) RunInTransaction(ctx context.Context, fn func(ctx context.Cont
 func (r Postgres) Save(ctx context.Context, task *aggregate.Task) error {
 	now := time.Now().UTC()
 	const q = `
-INSERT INTO tasks (id, title, status, due_date, created_at, updated_at, completed_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO tasks (id, owner_id, title, status, due_date, created_at, updated_at, completed_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 ON CONFLICT (id) DO UPDATE SET
 	title = EXCLUDED.title,
 	status = EXCLUDED.status,
 	due_date = EXCLUDED.due_date,
 	updated_at = EXCLUDED.updated_at,
 	completed_at = EXCLUDED.completed_at`
-	_, err := r.querier(ctx).Exec(ctx, q, task.ID(), task.Title(), string(task.Status()), task.DueDate(), task.CreatedAt(), now, task.CompletedAt())
+	_, err := r.querier(ctx).Exec(ctx, q, task.ID(), task.OwnerID(), task.Title(), string(task.Status()), task.DueDate(), task.CreatedAt(), now, task.CompletedAt())
 	if err != nil {
 		return errs.New(errs.CodeInternalError, errs.KindInternal, err)
 	}
@@ -70,23 +70,24 @@ ON CONFLICT (id) DO UPDATE SET
 
 func (r Postgres) Get(ctx context.Context, id uuid.UUID) (*aggregate.Task, error) {
 	const q = `
-SELECT id, title, status, due_date, created_at, completed_at
+SELECT id, owner_id, title, status, due_date, created_at, completed_at
 FROM tasks
 WHERE id = $1`
 	var (
 		rowID       uuid.UUID
+		ownerID     uuid.UUID
 		title       string
 		status      string
 		dueDate     *time.Time
 		createdAt   time.Time
 		completedAt *time.Time
 	)
-	err := r.querier(ctx).QueryRow(ctx, q, id).Scan(&rowID, &title, &status, &dueDate, &createdAt, &completedAt)
+	err := r.querier(ctx).QueryRow(ctx, q, id).Scan(&rowID, &ownerID, &title, &status, &dueDate, &createdAt, &completedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, errs.New(errs.CodeTaskNotFound, errs.KindNotFound, fmt.Errorf("task %s not found", id))
 	}
 	if err != nil {
 		return nil, errs.New(errs.CodeInternalError, errs.KindInternal, err)
 	}
-	return aggregate.RestoreTask(rowID, title, enum.Status(status), dueDate, createdAt, completedAt), nil
+	return aggregate.RestoreTask(rowID, ownerID, title, enum.Status(status), dueDate, createdAt, completedAt), nil
 }

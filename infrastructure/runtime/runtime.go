@@ -18,7 +18,10 @@ import (
 	"github.com/rfanazhari/go-boilerplate/domain/service"
 	"github.com/rfanazhari/go-boilerplate/infrastructure/config"
 	appi18n "github.com/rfanazhari/go-boilerplate/infrastructure/i18n"
+	accountrepository "github.com/rfanazhari/go-boilerplate/infrastructure/repository/accountrepository"
 	taskrepository "github.com/rfanazhari/go-boilerplate/infrastructure/repository/taskrepository"
+	tokenrepository "github.com/rfanazhari/go-boilerplate/infrastructure/repository/tokenrepository"
+	"github.com/rfanazhari/go-boilerplate/infrastructure/seed"
 	infsvc "github.com/rfanazhari/go-boilerplate/infrastructure/service"
 	"github.com/rfanazhari/go-boilerplate/translations"
 )
@@ -38,6 +41,8 @@ func Start(ctx context.Context, cfg config.Config, logApp *logmanager.Applicatio
 
 	var pool *pgxpool.Pool
 	var tasks repository.TaskRepository = taskrepository.Unavailable{}
+	var accounts repository.AccountRepository = &accountrepository.Memory{}
+	var tokens repository.TokenRepository = &tokenrepository.Memory{}
 	var publisher appevent.CompletionPublisher = infsvc.UnavailablePublisher{}
 	var rabbit infsvc.RabbitPublisher
 	if cfg.InfraOptional {
@@ -58,7 +63,13 @@ func Start(ctx context.Context, cfg config.Config, logApp *logmanager.Applicatio
 			}
 		} else {
 			pool = opened
+			if err := seed.SeedAdmin(ctx, pool, cfg); err != nil {
+				opened.Close()
+				return nil, err
+			}
 			tasks = taskrepository.Postgres{Pool: pool}
+			accounts = accountrepository.Postgres{Pool: pool}
+			tokens = tokenrepository.Postgres{Pool: pool}
 		}
 	} else if !cfg.InfraOptional {
 		return nil, errors.New("DATABASE_URL is required")
@@ -103,13 +114,31 @@ func Start(ctx context.Context, cfg config.Config, logApp *logmanager.Applicatio
 		return nil, errors.New("RABBITMQ_URL is required")
 	}
 
-	uc := usecase.TaskUseCase{
+	hasher := infsvc.BcryptHasher{}
+	clock := service.SystemClock{}
+	taskUC := usecase.TaskUseCase{
 		Tasks:     tasks,
 		Publisher: publisher,
-		Clock:     service.SystemClock{},
+		Clock:     clock,
 	}
+	accountUC := usecase.AccountUseCase{
+		Accounts: accounts,
+		Tokens:   tokens,
+		Hasher:   hasher,
+		Clock:    clock,
+	}
+	loginUC := usecase.LoginUseCase{
+		Accounts: accounts,
+		Tokens:   tokens,
+		Hasher:   hasher,
+	}
+	auth := httpapi.Auth{Accounts: accounts, Tokens: tokens}
 	handler := httpapi.Server{
-		Handler: httpapi.TaskHandler{UseCase: uc, Bundle: bundle},
+		Handler: httpapi.TaskHandler{UseCase: taskUC, Bundle: bundle},
+		Login:   httpapi.LoginHandler{UseCase: loginUC, Bundle: bundle},
+		Account: httpapi.AccountHandler{UseCase: accountUC, Bundle: bundle},
+		Profile: httpapi.ProfileHandler{UseCase: accountUC, Bundle: bundle},
+		Auth:    auth,
 		Bundle:  bundle,
 		Log:     logApp,
 	}.Router()

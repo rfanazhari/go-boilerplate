@@ -3,10 +3,12 @@ packages:
   github.com/rfanazhari/go-boilerplate/domain/repository:
     config:
       dir: test/mocks
-      filename: task_repository_mock.go
+      filename: "{{.InterfaceName | snakecase}}_mock.go"
       outpkg: mocks
     interfaces:
       TaskRepository:
+      AccountRepository:
+      TokenRepository:
   github.com/rfanazhari/go-boilerplate/application/event:
     config:
       dir: test/mocks

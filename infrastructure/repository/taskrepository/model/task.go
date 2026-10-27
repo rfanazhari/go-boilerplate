@@ -8,6 +8,7 @@ import (
 
 type TaskRow struct {
 	ID          uuid.UUID
+	OwnerID     uuid.UUID
 	Title       string
 	Status      string
 	DueDate     *time.Time
