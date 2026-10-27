@@ -1,0 +1,149 @@
+package runtime
+
+import (
+	"context"
+	"errors"
+	"net"
+	"net/http"
+	"time"
+
+	"github.com/SALT-Indonesia/salt-pkg/logmanager"
+	"github.com/jackc/pgx/v5/pgxpool"
+	amqp "github.com/rabbitmq/amqp091-go"
+
+	appevent "github.com/rfanazhari/go-boilerplate/application/event"
+	"github.com/rfanazhari/go-boilerplate/application/usecase"
+	httpapi "github.com/rfanazhari/go-boilerplate/delivery/http"
+	"github.com/rfanazhari/go-boilerplate/domain/repository"
+	"github.com/rfanazhari/go-boilerplate/domain/service"
+	"github.com/rfanazhari/go-boilerplate/infrastructure/config"
+	appi18n "github.com/rfanazhari/go-boilerplate/infrastructure/i18n"
+	taskrepository "github.com/rfanazhari/go-boilerplate/infrastructure/repository/taskrepository"
+	infsvc "github.com/rfanazhari/go-boilerplate/infrastructure/service"
+	"github.com/rfanazhari/go-boilerplate/translations"
+)
+
+type Runtime struct {
+	HTTP     *http.Server
+	Pool     *pgxpool.Pool
+	Rabbit   infsvc.RabbitPublisher
+	Shutdown time.Duration
+}
+
+func Start(ctx context.Context, cfg config.Config, logApp *logmanager.Application) (*Runtime, error) {
+	bundle, err := appi18n.Load(translations.Files)
+	if err != nil {
+		return nil, err
+	}
+
+	var pool *pgxpool.Pool
+	var tasks repository.TaskRepository = taskrepository.Unavailable{}
+	var publisher appevent.CompletionPublisher = infsvc.UnavailablePublisher{}
+	var rabbit infsvc.RabbitPublisher
+	if cfg.InfraOptional {
+		tasks = &taskrepository.Memory{}
+		publisher = &infsvc.RecordingPublisher{}
+	}
+
+	if cfg.DatabaseURL != "" {
+		opened, err := pgxpool.New(ctx, cfg.DatabaseURL)
+		if err != nil {
+			if !cfg.InfraOptional {
+				return nil, err
+			}
+		} else if err := opened.Ping(ctx); err != nil {
+			opened.Close()
+			if !cfg.InfraOptional {
+				return nil, err
+			}
+		} else {
+			pool = opened
+			tasks = taskrepository.Postgres{Pool: pool}
+		}
+	} else if !cfg.InfraOptional {
+		return nil, errors.New("DATABASE_URL is required")
+	}
+
+	if cfg.RabbitURL != "" {
+		conn, err := amqp.Dial(cfg.RabbitURL)
+		if err != nil {
+			if pool != nil {
+				pool.Close()
+			}
+			if !cfg.InfraOptional {
+				return nil, err
+			}
+		} else {
+			ch, err := conn.Channel()
+			if err != nil {
+				_ = conn.Close()
+				if pool != nil {
+					pool.Close()
+				}
+				return nil, err
+			}
+			if err := infsvc.DeclareTaskCompleted(ch, cfg.RabbitExchange, cfg.RabbitQueue); err != nil {
+				_ = ch.Close()
+				_ = conn.Close()
+				if pool != nil {
+					pool.Close()
+				}
+				if !cfg.InfraOptional {
+					return nil, err
+				}
+			} else {
+				rabbit = infsvc.RabbitPublisher{Conn: conn, Channel: ch, Exchange: cfg.RabbitExchange, Queue: cfg.RabbitQueue}
+				publisher = rabbit
+			}
+		}
+	} else if !cfg.InfraOptional {
+		if pool != nil {
+			pool.Close()
+		}
+		return nil, errors.New("RABBITMQ_URL is required")
+	}
+
+	uc := usecase.TaskUseCase{
+		Tasks:     tasks,
+		Publisher: publisher,
+		Clock:     service.SystemClock{},
+	}
+	handler := httpapi.Server{
+		Handler: httpapi.TaskHandler{UseCase: uc, Bundle: bundle},
+		Bundle:  bundle,
+		Log:     logApp,
+	}.Router()
+
+	ln, err := net.Listen("tcp", cfg.HTTPAddr)
+	if err != nil {
+		if pool != nil {
+			pool.Close()
+		}
+		rabbit.Close()
+		return nil, err
+	}
+	srv := &http.Server{Handler: handler, Addr: ln.Addr().String(), ReadHeaderTimeout: 5 * time.Second}
+	go func() {
+		_ = srv.Serve(ln)
+	}()
+	return &Runtime{HTTP: srv, Pool: pool, Rabbit: rabbit, Shutdown: cfg.ShutdownTimeout}, nil
+}
+
+func (rt *Runtime) Addr() string {
+	if rt == nil || rt.HTTP == nil {
+		return ""
+	}
+	return rt.HTTP.Addr
+}
+
+func (rt *Runtime) Stop(ctx context.Context) error {
+	var first error
+	if rt.HTTP != nil {
+		first = rt.HTTP.Shutdown(ctx)
+	}
+	rt.Rabbit.Close()
+	if rt.Pool != nil {
+		rt.Pool.Close()
+	}
+	return first
+}

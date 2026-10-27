@@ -1,0 +1,12 @@
+coverage.out
+coverage.html
+.bin/
+.idea/
+*.exe
+tmp/
+
+## agents ai
+.agents
+.junie
+AGENTS.md
+skills-lock.json

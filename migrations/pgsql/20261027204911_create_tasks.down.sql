@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS "tasks_status_INDEX";
+DROP TABLE IF EXISTS tasks;

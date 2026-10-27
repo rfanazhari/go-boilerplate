@@ -1,0 +1,16 @@
+with-expecter: true
+packages:
+  github.com/rfanazhari/go-boilerplate/domain/repository:
+    config:
+      dir: test/mocks
+      filename: task_repository_mock.go
+      outpkg: mocks
+    interfaces:
+      TaskRepository:
+  github.com/rfanazhari/go-boilerplate/application/event:
+    config:
+      dir: test/mocks
+      filename: completion_publisher_mock.go
+      outpkg: mocks
+    interfaces:
+      CompletionPublisher:

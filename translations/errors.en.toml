@@ -1,0 +1,35 @@
+[INVALID_TITLE]
+other = "title must be between 1 and 100 characters after trimming whitespace"
+
+[INVALID_DUE_DATE]
+other = "due date cannot be in the past"
+
+[INVALID_IDENTIFIER]
+other = "task identifier is not a valid uuid"
+
+[VALIDATION_FAILED]
+other = "request validation failed"
+
+[MALFORMED_REQUEST]
+other = "request body is malformed or contains unknown fields"
+
+[TASK_NOT_FOUND]
+other = "task was not found"
+
+[ROUTE_NOT_FOUND]
+other = "route was not found"
+
+[METHOD_NOT_ALLOWED]
+other = "method is not allowed"
+
+[INVALID_TRANSITION]
+other = "the requested task transition is not allowed"
+
+[TASK_FINAL]
+other = "a done task cannot be modified"
+
+[EVENT_UNAVAILABLE]
+other = "the completion event could not be accepted"
+
+[INTERNAL_ERROR]
+other = "an unexpected error occurred"

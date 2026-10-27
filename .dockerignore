@@ -1,0 +1,11 @@
+.git
+.idea
+.agents
+.junie
+coverage.out
+coverage.html
+tmp
+*.md
+docs
+test
+.cursor

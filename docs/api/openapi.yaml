@@ -1,0 +1,207 @@
+openapi: 3.0.3
+info:
+  title: taskdemo Task Tracking API
+  version: 1.0.0
+  description: HTTP JSON contract for the Task Tracking reference feature.
+servers:
+  - url: http://127.0.0.1:8080
+paths:
+  /health:
+    get:
+      summary: HTTP readiness
+      security: []
+      responses:
+        "200":
+          description: Process can serve HTTP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEmpty"
+  /tasks:
+    post:
+      summary: Create a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTask"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessTask"
+        "400":
+          $ref: "#/components/responses/Error"
+  /tasks/{id}:
+    get:
+      summary: Get task details
+      parameters:
+        - $ref: "#/components/parameters/TaskID"
+      responses:
+        "200":
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessTask"
+        "400":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /tasks/{id}/start:
+    post:
+      summary: Start a task
+      parameters:
+        - $ref: "#/components/parameters/TaskID"
+      responses:
+        "200":
+          description: Started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessTask"
+        "409":
+          $ref: "#/components/responses/Error"
+  /tasks/{id}/complete:
+    post:
+      summary: Complete a task
+      parameters:
+        - $ref: "#/components/parameters/TaskID"
+      responses:
+        "200":
+          description: Completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessTask"
+        "409":
+          $ref: "#/components/responses/Error"
+        "503":
+          $ref: "#/components/responses/Error"
+  /tasks/{id}/due-date:
+    patch:
+      summary: Reschedule or clear a due date
+      parameters:
+        - $ref: "#/components/parameters/TaskID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RescheduleTask"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessTask"
+        "400":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+components:
+  parameters:
+    TaskID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    CreateTask:
+      type: object
+      additionalProperties: false
+      required: [title]
+      properties:
+        title:
+          type: string
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+    RescheduleTask:
+      type: object
+      additionalProperties: false
+      required: [dueDate]
+      properties:
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+        overdue:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+    SuccessTask:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          const: success
+        data:
+          $ref: "#/components/schemas/Task"
+    SuccessEmpty:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          const: success
+        data:
+          type: object
+    ErrorEnvelope:
+      type: object
+      required: [status, data, error]
+      properties:
+        status:
+          const: error
+        data:
+          type: object
+        error:
+          type: object
+          required: [message, code, errors]
+          properties:
+            message:
+              type: string
+            code:
+              type: string
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+  responses:
+    Error:
+      description: Standard error envelope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"

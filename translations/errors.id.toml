@@ -1,0 +1,35 @@
+[INVALID_TITLE]
+other = "judul harus berisi 1 sampai 100 karakter setelah spasi dihilangkan"
+
+[INVALID_DUE_DATE]
+other = "tanggal jatuh tempo tidak boleh di masa lalu"
+
+[INVALID_IDENTIFIER]
+other = "identifikasi tugas bukan uuid yang valid"
+
+[VALIDATION_FAILED]
+other = "validasi permintaan gagal"
+
+[MALFORMED_REQUEST]
+other = "badan permintaan tidak valid atau berisi field yang tidak dikenal"
+
+[TASK_NOT_FOUND]
+other = "tugas tidak ditemukan"
+
+[ROUTE_NOT_FOUND]
+other = "rute tidak ditemukan"
+
+[METHOD_NOT_ALLOWED]
+other = "metode tidak diizinkan"
+
+[INVALID_TRANSITION]
+other = "transisi tugas yang diminta tidak diizinkan"
+
+[TASK_FINAL]
+other = "tugas yang selesai tidak dapat diubah"
+
+[EVENT_UNAVAILABLE]
+other = "peristiwa penyelesaian tidak dapat diterima"
+
+[INTERNAL_ERROR]
+other = "terjadi kesalahan yang tidak terduga"

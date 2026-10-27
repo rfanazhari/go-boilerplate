@@ -1,0 +1,11 @@
+version: "2"
+run:
+  timeout: 12m
+linters:
+  exclusions:
+    paths:
+      - test/mocks
+      - ".*_mock\\.go"
+formatters:
+  enable:
+    - gofmt
