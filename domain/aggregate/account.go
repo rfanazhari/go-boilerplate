@@ -108,6 +108,14 @@ func (a *Account) DeletedAt() *time.Time {
 	return cloneTime(a.deletedAt)
 }
 
+func (a *Account) CreatedAt() time.Time {
+	return a.createdAt
+}
+
+func (a *Account) UpdatedAt() time.Time {
+	return a.updatedAt
+}
+
 func (a *Account) IsSoftDeleted() bool {
 	return a.deletedAt != nil
 }

@@ -33,3 +33,21 @@ other = "peristiwa penyelesaian tidak dapat diterima"
 
 [INTERNAL_ERROR]
 other = "terjadi kesalahan yang tidak terduga"
+
+[INVALID_ROLE]
+other = "peran akun harus admin atau user"
+
+[INVALID_STATUS]
+other = "transisi status akun tidak diizinkan"
+
+[INVALID_PASSWORD]
+other = "kata sandi tidak valid"
+
+[ACCOUNT_NOT_FOUND]
+other = "akun tidak ditemukan"
+
+[EMAIL_TAKEN]
+other = "email sudah digunakan"
+
+[LAST_ADMIN]
+other = "operasi ini akan menghapus admin terakhir"

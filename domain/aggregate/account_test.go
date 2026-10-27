@@ -14,16 +14,16 @@ import (
 )
 
 type accountNewCase struct {
-	name          string
-	email         string
-	accountName   string
-	passwordHash  string
-	role          enum.Role
-	now           time.Time
-	wantErr       bool
-	wantCode      string
-	wantEmail     string
-	wantName      string
+	name         string
+	email        string
+	accountName  string
+	passwordHash string
+	role         enum.Role
+	now          time.Time
+	wantErr      bool
+	wantCode     string
+	wantEmail    string
+	wantName     string
 }
 
 func TestNewAccount(t *testing.T) {
@@ -32,24 +32,24 @@ func TestNewAccount(t *testing.T) {
 
 	tests := []accountNewCase{
 		{
-			name:          "accept admin role with trimmed email",
-			email:         "  ada@example.com  ",
-			accountName:   "Ada",
-			passwordHash:  "hash",
-			role:          enum.RoleAdmin,
-			now:           now,
-			wantEmail:     "ada@example.com",
-			wantName:      "Ada",
+			name:         "accept admin role with trimmed email",
+			email:        "  ada@example.com  ",
+			accountName:  "Ada",
+			passwordHash: "hash",
+			role:         enum.RoleAdmin,
+			now:          now,
+			wantEmail:    "ada@example.com",
+			wantName:     "Ada",
 		},
 		{
-			name:          "accept user role",
-			email:         "budi@example.com",
-			accountName:   "Budi",
-			passwordHash:  "hash",
-			role:          enum.RoleUser,
-			now:           now,
-			wantEmail:     "budi@example.com",
-			wantName:      "Budi",
+			name:         "accept user role",
+			email:        "budi@example.com",
+			accountName:  "Budi",
+			passwordHash: "hash",
+			role:         enum.RoleUser,
+			now:          now,
+			wantEmail:    "budi@example.com",
+			wantName:     "Budi",
 		},
 		{
 			name:         "reject empty email",

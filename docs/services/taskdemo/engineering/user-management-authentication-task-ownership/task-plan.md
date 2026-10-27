@@ -22,7 +22,7 @@
       — **Test yang harus lulus:** migration up/down on a database that already has at least one `tasks` row (`go test -tags=integration ./test/infrastructure/...` or a focused migrate test); unique email succeeds twice after soft-delete (can wait for T3 if seed-only here); config parses new env vars  
       — **DoD:** Up migration applies; down drops tokens, `owner_id`, accounts in that order; existing task rows have `owner_id` = seeded admin and NOT NULL; `.env.example` documents seed vars without real secrets
 
-- [ ] **T2. Domain: Account aggregate and Task owner** — domain — M  
+- [x] **T2. Domain: Account aggregate and Task owner** — domain — M  
       — depends: T1 — ref: design §4  
       — **Tujuan:** Model akun (role, status, soft-delete, profil) dan task wajib punya owner di agregat, tanpa mengubah mesin status BR-001–009.  
       — **File (new):** `domain/aggregate/account.go`, `domain/aggregate/account_test.go`; `domain/enum/role.go`; `domain/enum/account_status.go`; `domain/repository/account.go`; `domain/repository/token.go`; hasher port if placed under `domain/service`  
@@ -30,7 +30,7 @@
       — **Test yang harus lulus:** `go test ./domain/aggregate -v` — NewTask rejects missing owner; existing title/due/start/complete/reschedule tables still pass; Account: only admin|user; deactivate/activate/soft-delete; profile cannot change role/email/status  
       — **DoD:** `NewTask` / `RestoreTask` carry `ownerID`; `TaskCompleted` still `TaskID` + `CompletedAt` only
 
-- [ ] **T3. User management: persist accounts, admin commands, self profile** — application + infrastructure — L  
+- [x] **T3. User management: persist accounts, admin commands, self profile** — application + infrastructure — L  
       — depends: T2 — ref: design §4–5, D2 D4  
       — **Tujuan:** Admin dapat menambah akun (role dan password dipilih admin), menonaktifkan, mengaktifkan kembali, dan soft-delete (bukan diri sendiri, bukan admin terakhir); user mengubah nama/password sendiri. Belum ada HTTP.  
       — **File (new):** `application/usecase/account.go`, `application/usecase/account_test.go`; `application/dto/account.go`; `infrastructure/repository/accountrepository/postgres.go`, `memory.go`; bcrypt hasher implementation; Mockery mocks for new ports  

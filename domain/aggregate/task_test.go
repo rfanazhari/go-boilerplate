@@ -44,12 +44,12 @@ func TestNewTask(t *testing.T) {
 
 	tests := []taskNewCase{
 		{
-			name:      "reject missing owner id",
-			ownerID:   uuid.Nil,
-			title:     "Prepare report",
-			now:       now,
-			wantErr:   true,
-			wantCode:  errs.CodeValidationFailed,
+			name:     "reject missing owner id",
+			ownerID:  uuid.Nil,
+			title:    "Prepare report",
+			now:      now,
+			wantErr:  true,
+			wantCode: errs.CodeValidationFailed,
 		},
 		{
 			name:      "create with title prepare report and no due date",
