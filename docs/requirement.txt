@@ -1,0 +1,45 @@
+GO SERVICE BOILERPLATE REQUIREMENTS
+
+Validated from the Gonesis conversation on 2026-10-27. Comment lines are not selected values.
+
+[Service]
+Name: taskdemo
+Purpose: A standalone Go service implementing the Task Tracking reference feature as an architecture and TDD example.
+Target directory and status: repository root, new service.
+Module path: github.com/rfanazhari/go-boilerplate
+Runtime: HTTP JSON API; no authentication, ownership, assignment, or other integrations.
+Optional constraints and requested Git actions: Follow the local Go toolchain. Use a dedicated worktree when Git history allows. Do not commit or create an MR. Packaging and deployment are outside scope.
+
+[1. Persistence]
+Storage and driver, if applicable: PostgreSQL via pgx; raw SQL repository; golang-migrate files under migrations/pgsql/.
+Retention and restart behavior: Task rows survive process restart while the database remains available.
+Consistency and failure expectations: Mutations are atomic at the database transaction boundary. Concurrent commands on one task must not bypass state-transition rules. Rejected commands do not change state or timestamps.
+Database/schema resources, if applicable: Local PostgreSQL provisioned with docker-compose (service db). Default local settings: host 127.0.0.1, port 5432, database taskdemo, user postgres, password postgres, sslmode disable.
+
+[2. Internal events]
+Dispatch mechanism: RabbitMQ via eventmanager when the selected version satisfies publish-error reporting; otherwise a service-local AMQP adapter. Provisioned with docker-compose (service rabbitmq).
+Event fields and publication point: TaskCompleted contains taskId and completedAt. Publication is AMQP publish after a successful save in the same application operation, before the caller observes success.
+Save/publication failure behavior: If persistence fails, leave the task unchanged. If publish fails, roll back the still-open save transaction when possible so the task is unchanged, then return 503. If the task cannot be rolled back after a publish/commit failure, return 503. Repeated completion of an already-Done task returns 409 and adds no event.
+Delivery, retries, and shutdown: Log consumer/handler failures; do not automatically retry them or roll back a previously accepted completion. On shutdown, stop new commands, close the HTTP listener, AMQP, and database pool within the total shutdown budget.
+Durability guarantees: No exactly-once delivery promise. Unexpected process termination can leave a published message without a committed row or a committed row without a published message.
+
+[3. Time semantics]
+Timezone, representation, and precision: Use UTC instants. JSON timestamps use RFC3339 and millisecond precision; compare canonical values at the same precision. Accept valid RFC3339 offsets and normalize them to UTC. Reject unsupported extra fractional precision rather than silently changing the boundary.
+Due-date validation and overdue boundaries: A dueDate equal to the current system time is allowed. Reject dueDate strictly before now on creation or rescheduling. A task is overdue only when now is strictly after its dueDate and the task is not Done. A task without dueDate is never overdue.
+Rescheduling and clearing a due date: A non-Done task may replace or clear its dueDate. For the rescheduling operation, null clears it; an absent dueDate field is invalid. For creation, absent or null dueDate means no due date.
+Timestamp ownership and test clock: The system assigns createdAt on creation and completedAt on successful completion. Clients cannot supply these timestamps. Use controllable time in domain/application tests, including exact boundaries and time advancement.
+
+[4. API contract]
+Transport and operations/routes: HTTP JSON. POST /tasks creates a task; POST /tasks/{id}/start starts it; POST /tasks/{id}/complete completes it; PATCH /tasks/{id}/due-date reschedules or clears the date; GET /tasks/{id} returns details. GET /health is unauthenticated. No list, delete, or title-edit endpoint.
+Identifier and state representation: Generate UUID string identifiers on the server. Serialize states as todo, in_progress, and done. A malformed UUID is invalid input; a well-formed UUID that does not exist is not found.
+Request and response fields: Create accepts title and optional dueDate. Start/complete have no request fields. Reschedule accepts dueDate. Task details contain id, title, status, dueDate, overdue, createdAt, and completedAt. dueDate and completedAt remain present as null when unset. Successful task operations return the resulting task details in data; health returns data: {}.
+Input boundaries and validation: Trim leading/trailing Unicode whitespace from title, store the trimmed value, and count Unicode code points after trimming. Accept 1-100 code points; reject whitespace-only or overlong titles. Reject unknown request fields and client-supplied identifiers, states, or system timestamps. Start/complete accept no body or an empty object only.
+Success statuses and health: Create returns 201; start, complete, reschedule, and details return 200. GET /health returns 200 with status: success and data: {}. Use the standard envelope for all HTTP paths, including validation, routing, and method errors. Health indicates HTTP readiness only.
+Error statuses and response data: Use 400 for malformed input, invalid title/date/identifier, or unexpected request fields; 404 for a missing task or unknown route; 405 for an unsupported method; 409 for a forbidden state transition or modification of Done; 503 for completion-event acceptance failure; 500 for unexpected technical failures. All failures use status: error, data: {}, a dedicated error code, and a safe message. Localize messages in EN/ID; log technical causes internally.
+
+[5. Verification]
+Required business/API checks: Demonstrate RED/GREEN for BR-01-BR-09 and all reference acceptance scenarios. Cover concurrent transition correctness and save/publish failure behavior in application tests. Demonstrate create-start-complete-view, rescheduling/clearing, not found, rejected Todo-to-Done, and attempted mutation of Done through the real API when live resources are available. Use controlled time for exact boundary/overdue evidence.
+HTTP smoke and lifecycle expectations: Use a go test smoke harness that starts the actual composition root on a local listener, verifies unauthenticated GET /health and its JSON envelope, then verifies bounded shutdown. Health smoke may use loopback HTTP without requiring live PostgreSQL or RabbitMQ if those resources are absent, provided the composition still owns listener lifecycle. Optional SQL/broker integration tests skip when resources are missing (`go test -tags=integration`).
+Architecture constraints: Keep domain, application, delivery, and infrastructure directly at the service root. Domain must not depend on HTTP/database/broker adapters. Supply repeatable dependency-direction checks and public domain tests proving that invariants are enforced without handlers or runtime storage.
+Available local resources and execution limits: Go/tool dependencies may be installed through the environment's normal permission process. Loopback networking is available. Docker Compose defines local PostgreSQL and RabbitMQ; ordinary unit checks must not require them. Allow at most 5 seconds for complete shutdown.
+Verification evidence expected: Record exact commands and results for all-package checks, unit tests/race checks, lint, security, architecture checks, API flow, and health smoke. Include rule-to-test mapping, RED/GREEN evidence, and any limitations.
