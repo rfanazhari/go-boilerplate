@@ -19,6 +19,7 @@ import (
 	"github.com/rfanazhari/go-boilerplate/infrastructure/config"
 	appi18n "github.com/rfanazhari/go-boilerplate/infrastructure/i18n"
 	taskrepository "github.com/rfanazhari/go-boilerplate/infrastructure/repository/taskrepository"
+	"github.com/rfanazhari/go-boilerplate/infrastructure/seed"
 	infsvc "github.com/rfanazhari/go-boilerplate/infrastructure/service"
 	"github.com/rfanazhari/go-boilerplate/translations"
 )
@@ -58,6 +59,10 @@ func Start(ctx context.Context, cfg config.Config, logApp *logmanager.Applicatio
 			}
 		} else {
 			pool = opened
+			if err := seed.SeedAdmin(ctx, pool, cfg); err != nil {
+				opened.Close()
+				return nil, err
+			}
 			tasks = taskrepository.Postgres{Pool: pool}
 		}
 	} else if !cfg.InfraOptional {

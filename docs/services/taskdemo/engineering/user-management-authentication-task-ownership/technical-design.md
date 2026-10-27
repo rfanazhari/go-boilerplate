@@ -112,6 +112,8 @@ No expiry column in v1: revocation is explicit (D1, D5). Rows deleted (or marked
 
 Idempotent first admin: env `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_ADMIN_NAME` (defaults documented in `cmd/app/.env.example`). Hash at process start (or a one-shot seed command used by compose after migrate). Insert only when no live admin exists. Do not put a plaintext password in SQL.
 
+**T1 bootstrap (migration + runtime):** The accounts migration inserts a fixed bootstrap admin row (`id` `e0000000-0000-4000-8000-000000000001`, constant `seed.BootstrapAdminID`) with default email/name and a bcrypt hash of the documented default password so legacy `tasks` rows can be backfilled before the app starts. On process start, `seed.SeedAdmin` updates that row from env (email, name, password hash). If the bootstrap row is absent and no live admin exists, it inserts a new admin from env instead.
+
 ### Rollback
 
 Down migration: drop `tasks.owner_id`, drop `credential_tokens`, drop `accounts`. Ordered: tokens → owner_id → accounts. Data loss: all accounts and tokens; tasks remain without owner (pre-change shape).

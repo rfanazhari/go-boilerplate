@@ -63,6 +63,18 @@ Technical decisions in this feature that exist because of business decisions or 
 - **Revisit when:** Product adds self-logout, device lists, or timed sessions.
 - **Status:** active
 
+## D6a: Bootstrap admin row in migration for owner backfill
+
+- **Business driver:** D6 requires every task row to have `owner_id` NOT NULL immediately after migrate, while D2 forbids plaintext passwords in SQL and the seed design hashes passwords at process start.
+- **Technical decision:** The accounts migration inserts one bootstrap admin with fixed UUID `e0000000-0000-4000-8000-000000000001` and a precomputed bcrypt hash of the default `SEED_ADMIN_PASSWORD` (`changeme`). `tasks.owner_id` is backfilled to that id in the same migration. `seed.SeedAdmin` at runtime updates that row from env; if no bootstrap row and no live admin, it inserts from env.
+- **What this means for the product:** Migrate+backfill can run before the app; the first login uses env-configured credentials after the app has started at least once (or default dev credentials if env matches defaults).
+- **Alternatives considered:**
+  - **Nullable `owner_id` until seed:** Violates NOT NULL at end of up migration.
+  - **Seed inside `cmd/migrate`:** Extra coupling; entrypoint already runs migrate then app.
+- **Trade-offs accepted:** Bootstrap id is stable forever; historical tasks always reference it until transfer exists.
+- **Revisit when:** Product requires migrate-only deploy with no runtime seed step.
+- **Status:** active
+
 ## D6: Legacy tasks without an owner are assigned to the seeded admin
 
 - **Business driver:** Every task must have an owner after this change (`BR-TASKDEMO-040`), and existing rows have none (Q13). There is no “unowned” state in the product.

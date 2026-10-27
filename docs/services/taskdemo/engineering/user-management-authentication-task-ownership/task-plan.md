@@ -14,7 +14,7 @@
 
 ### Sequential (must be done in order)
 
-- [ ] **T1. Schema: accounts, tokens, unique live email, seed admin, task owner backfill** — infrastructure/migrate — L  
+- [x] **T1. Schema: accounts, tokens, unique live email, seed admin, task owner backfill** — infrastructure/migrate — L  
       — depends: none — ref: design §3, decision-log D4 D5 D6  
       — **Tujuan:** Tabel akun dan token ada; email unik hanya untuk akun yang belum soft-delete; admin pertama bisa di-seed; baris `tasks` lama mendapat `owner_id` lalu kolom wajib.  
       — **File (new):** `migrations/pgsql/<timestamp>_accounts_tokens_task_owner.up.sql`, `*.down.sql`  
