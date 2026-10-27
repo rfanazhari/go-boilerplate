@@ -50,7 +50,8 @@ func view(task *aggregate.Task, now time.Time) dto.TaskView {
 
 func (u TaskUseCase) Create(ctx context.Context, input dto.CreateTaskInput) (dto.TaskView, error) {
 	now := u.now()
-	task, err := aggregate.NewTask(u.nextID(), input.Title, input.DueDate, now)
+	// Owner is stamped from the authenticated actor in T6; interim placeholder keeps domain invariants.
+	task, err := aggregate.NewTask(u.nextID(), uuid.MustParse("e0000000-0000-4000-8000-000000000001"), input.Title, input.DueDate, now)
 	if err != nil {
 		return dto.TaskView{}, err
 	}

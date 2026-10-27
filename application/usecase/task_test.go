@@ -21,6 +21,8 @@ import (
 	"github.com/rfanazhari/go-boilerplate/test/testdata"
 )
 
+var taskTestOwnerID = uuid.MustParse("e0000000-0000-4000-8000-000000000001")
+
 type usecaseCase struct {
 	name     string
 	run      func(t *testing.T, uc usecase.TaskUseCase, tasks *mocks.MockTaskRepository, pub *mocks.MockCompletionPublisher)
@@ -51,7 +53,7 @@ func TestTaskUseCaseScenarios(t *testing.T) {
 			run: func(t *testing.T, uc usecase.TaskUseCase, tasks *mocks.MockTaskRepository, pub *mocks.MockCompletionPublisher) {
 				var stored *aggregate.Task
 				tasks.EXPECT().Save(mock.Anything, mock.Anything).Run(func(_ context.Context, task *aggregate.Task) {
-					stored = aggregate.RestoreTask(task.ID(), task.Title(), task.Status(), task.DueDate(), task.CreatedAt(), task.CompletedAt())
+					stored = aggregate.RestoreTask(task.ID(), task.OwnerID(), task.Title(), task.Status(), task.DueDate(), task.CreatedAt(), task.CompletedAt())
 				}).Return(nil)
 				created, err := uc.Create(ctx, dto.CreateTaskInput{Title: testdata.TitlePrepareReport()})
 				require.NoError(t, err)
@@ -59,7 +61,7 @@ func TestTaskUseCaseScenarios(t *testing.T) {
 
 				tasks.EXPECT().Get(mock.Anything, created.ID).Return(stored, nil)
 				tasks.EXPECT().Save(mock.Anything, mock.Anything).Run(func(_ context.Context, task *aggregate.Task) {
-					stored = aggregate.RestoreTask(task.ID(), task.Title(), task.Status(), task.DueDate(), task.CreatedAt(), task.CompletedAt())
+					stored = aggregate.RestoreTask(task.ID(), task.OwnerID(), task.Title(), task.Status(), task.DueDate(), task.CreatedAt(), task.CompletedAt())
 				}).Return(nil)
 				started, err := uc.Start(ctx, created.ID)
 				require.NoError(t, err)
@@ -70,7 +72,7 @@ func TestTaskUseCaseScenarios(t *testing.T) {
 				})
 				tasks.EXPECT().Get(mock.Anything, created.ID).Return(stored, nil)
 				tasks.EXPECT().Save(mock.Anything, mock.Anything).Run(func(_ context.Context, task *aggregate.Task) {
-					stored = aggregate.RestoreTask(task.ID(), task.Title(), task.Status(), task.DueDate(), task.CreatedAt(), task.CompletedAt())
+					stored = aggregate.RestoreTask(task.ID(), task.OwnerID(), task.Title(), task.Status(), task.DueDate(), task.CreatedAt(), task.CompletedAt())
 				}).Return(nil)
 				pub.EXPECT().PublishTaskCompleted(mock.Anything, mock.Anything).Run(func(_ context.Context, completed domainevent.TaskCompleted) {
 					assert.Equal(t, created.ID, completed.TaskID)
@@ -85,7 +87,7 @@ func TestTaskUseCaseScenarios(t *testing.T) {
 		{
 			name: "complete todo does not publish",
 			run: func(t *testing.T, uc usecase.TaskUseCase, tasks *mocks.MockTaskRepository, pub *mocks.MockCompletionPublisher) {
-				task, err := aggregate.NewTask(uuid.New(), testdata.TitlePrepareReport(), nil, now)
+				task, err := aggregate.NewTask(uuid.New(), taskTestOwnerID, testdata.TitlePrepareReport(), nil, now)
 				require.NoError(t, err)
 				tasks.EXPECT().RunInTransaction(mock.Anything, mock.Anything).RunAndReturn(func(txCtx context.Context, fn func(context.Context) error) error {
 					return fn(txCtx)
@@ -115,7 +117,7 @@ func TestTaskUseCaseScenarios(t *testing.T) {
 		{
 			name: "publish failure rolls back via transaction error",
 			run: func(t *testing.T, uc usecase.TaskUseCase, tasks *mocks.MockTaskRepository, pub *mocks.MockCompletionPublisher) {
-				task, err := aggregate.NewTask(uuid.New(), testdata.TitlePrepareReport(), nil, now)
+				task, err := aggregate.NewTask(uuid.New(), taskTestOwnerID, testdata.TitlePrepareReport(), nil, now)
 				require.NoError(t, err)
 				require.NoError(t, task.Start())
 				tasks.EXPECT().RunInTransaction(mock.Anything, mock.Anything).RunAndReturn(func(txCtx context.Context, fn func(context.Context) error) error {
@@ -141,7 +143,7 @@ func TestTaskUseCaseScenarios(t *testing.T) {
 				tasks.EXPECT().Save(mock.Anything, mock.Anything).Return(nil)
 				created, err := uc.Create(ctx, dto.CreateTaskInput{Title: testdata.TitlePrepareReport(), DueDate: &due})
 				require.NoError(t, err)
-				task, err := aggregate.NewTask(id, testdata.TitlePrepareReport(), &due, now)
+				task, err := aggregate.NewTask(id, taskTestOwnerID, testdata.TitlePrepareReport(), &due, now)
 				require.NoError(t, err)
 				require.NoError(t, task.Start())
 				clock.Advance(2 * time.Hour)

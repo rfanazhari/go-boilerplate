@@ -16,6 +16,9 @@ const (
 	CodeInvalidRole       = "INVALID_ROLE"
 	CodeInvalidStatus     = "INVALID_STATUS"
 	CodeInvalidPassword   = "INVALID_PASSWORD"
+	CodeAccountNotFound   = "ACCOUNT_NOT_FOUND"
+	CodeEmailTaken        = "EMAIL_TAKEN"
+	CodeLastAdmin         = "LAST_ADMIN"
 )
 
 const (

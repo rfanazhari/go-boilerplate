@@ -13,4 +13,5 @@ type AccountRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*aggregate.Account, error)
 	GetByEmail(ctx context.Context, email string) (*aggregate.Account, error)
 	CountLiveAdmins(ctx context.Context) (int, error)
+	RunInTransaction(ctx context.Context, fn func(ctx context.Context) error) error
 }
