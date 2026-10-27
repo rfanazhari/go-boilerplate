@@ -10,7 +10,7 @@ lint:
 	GOTOOLCHAIN=go1.26.0 golangci-lint run -v --timeout 12m
 
 test.security:
-	govulncheck ./...
+	GOTOOLCHAIN=go1.26.10 govulncheck ./...
 
 test.arch:
 	go test ./test/architecture/... -v

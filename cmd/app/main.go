@@ -29,6 +29,7 @@ func run(ctx context.Context) error {
 			{FieldPattern: "Authorization", Type: logmanager.FullMask},
 			{FieldPattern: "Cookie", Type: logmanager.FullMask},
 			{FieldPattern: "token", Type: logmanager.FullMask},
+			{FieldPattern: "email", Type: logmanager.EmailMask},
 		}),
 	)
 	cfg, err := config.FromEnv()
