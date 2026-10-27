@@ -38,7 +38,7 @@
       — **Test yang harus lulus:** `go test ./application/usecase -v -run Account` (or equivalent table tests) — add account; duplicate live email 409; email reusable after soft-delete; last-admin and self-target 409; profile updates name/password hash only. Hasher unit test for bcrypt compare. Optional: `test/infrastructure` account repository round-trip  
       — **DoD:** Memory + Postgres account adapters; no delivery routes yet
 
-- [ ] **T4. Auth: login, hashed opaque token, revoke on deactivate/soft-delete** — application + infrastructure — M  
+- [x] **T4. Auth: login, hashed opaque token, revoke on deactivate/soft-delete** — application + infrastructure — M  
       — depends: T3 — ref: design §5, D1 D2 D5  
       — **Tujuan:** Login akun active menerbitkan token opaque; token disimpan ter-hash; login ditolak untuk non-active/soft-deleted dengan kode yang sama seperti password salah; deactivate/soft-delete menghapus semua token akun itu.  
       — **File (new):** `application/usecase/login.go`, `application/usecase/login_test.go`; `application/dto/login.go`; `infrastructure/repository/tokenrepository/postgres.go`, `memory.go`  
@@ -46,7 +46,7 @@
       — **Test yang harus lulus:** `go test ./application/usecase -v -run Login` — success stores hash not raw token; wrong password / inactive / deleted → `INVALID_CREDENTIALS`; after deactivate, GetByHash misses the old token  
       — **DoD:** Token repository DeleteByAccountID used by T3 lifecycle; still no HTTP
 
-- [ ] **T5. Middleware RBAC and HTTP for login, accounts, profile** — delivery — M  
+- [x] **T5. Middleware RBAC and HTTP for login, accounts, profile** — delivery — M  
       — depends: T4 — ref: design §2 §7, D3  
       — **Tujuan:** Identity dari Bearer di middleware; role admin vs user di subrouter, bukan di use case; health dan login tetap publik.  
       — **File (new):** `delivery/http/auth.go` (middleware + login handler); `delivery/http/auth_test.go`; `delivery/http/account.go`; `delivery/http/profile.go`  
@@ -54,7 +54,7 @@
       — **Test yang harus lulus:** `go test ./delivery/http -v` — no token → 401; user `POST /accounts` → 403; admin `POST /accounts` → 201; `GET /health` 200 without Authorization; login 200 then Bearer on profile  
       — **DoD:** Admin group and user group registered; task routes still **not** required to be correct for ownership (that is T6) but may already sit behind RequireAuth if that simplifies the mux — if so, existing smoke tests will fail until T6 and must be updated in T6 the same PR slice
 
-- [ ] **T6. Task ownership on HTTP/use case and RabbitMQ payload lock** — application + delivery + infrastructure — L  
+- [x] **T6. Task ownership on HTTP/use case and RabbitMQ payload lock** — application + delivery + infrastructure — L  
       — depends: T5 — ref: design §2 §4 §5, D3 D6  
       — **Tujuan:** Create meng-stamp owner = caller (user only); get/mutate hormati `BR-TASKDEMO-042`; admin GET any id; admin mutate/create ditolak (403 create via middleware, 404 mutate); JSON task menambah `ownerId`; event RabbitMQ **tidak** menambah field.  
       — **File (new):** none required beyond tests  

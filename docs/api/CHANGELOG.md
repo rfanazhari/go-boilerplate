@@ -8,6 +8,8 @@
 - Add user profile route: `PATCH /profile`.
 - Document `401` (`UNAUTHENTICATED`, `INVALID_CREDENTIALS`) and `403` (`FORBIDDEN`) responses.
 - `GET /health` remains unauthenticated.
+- Task `data` responses include read-only `ownerId` (set from the authenticated user on create; not accepted in request bodies).
+- `POST /tasks` is limited to the `user` role; admins receive `403`. Non-owner task access returns `404` (`TASK_NOT_FOUND`).
 
 ## 1.0.0 - 2026-10-27
 

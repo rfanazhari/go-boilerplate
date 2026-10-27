@@ -339,6 +339,10 @@ components:
         id:
           type: string
           format: uuid
+        ownerId:
+          type: string
+          format: uuid
+          readOnly: true
         title:
           type: string
         status:
