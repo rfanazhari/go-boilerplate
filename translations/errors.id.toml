@@ -57,3 +57,6 @@ other = "email atau kata sandi salah"
 
 [UNAUTHENTICATED]
 other = "autentikasi diperlukan"
+
+[FORBIDDEN]
+other = "anda tidak diizinkan melakukan tindakan ini"

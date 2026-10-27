@@ -9,6 +9,7 @@ import (
 	"github.com/SALT-Indonesia/salt-pkg/logmanager"
 	"github.com/SALT-Indonesia/salt-pkg/logmanager/integrations/lmgorilla"
 
+	"github.com/rfanazhari/go-boilerplate/domain/enum"
 	"github.com/rfanazhari/go-boilerplate/pkg/errs"
 )
 
@@ -27,13 +28,27 @@ func (s Server) Router() http.Handler {
 	router.Use(lmgorilla.Middleware(s.Log))
 	router.HandleFunc("/health", s.health).Methods(http.MethodGet)
 	router.HandleFunc("/login", s.Login.Login).Methods(http.MethodPost)
-	router.HandleFunc("/accounts", s.Account.Create).Methods(http.MethodPost)
-	router.HandleFunc("/profile", s.Profile.Update).Methods(http.MethodPatch)
-	router.HandleFunc("/tasks", s.Handler.Create).Methods(http.MethodPost)
-	router.HandleFunc("/tasks/{id}/start", s.Handler.Start).Methods(http.MethodPost)
-	router.HandleFunc("/tasks/{id}/complete", s.Handler.Complete).Methods(http.MethodPost)
-	router.HandleFunc("/tasks/{id}/due-date", s.Handler.Reschedule).Methods(http.MethodPatch)
-	router.HandleFunc("/tasks/{id}", s.Handler.Get).Methods(http.MethodGet)
+
+	auth := s.Auth.Middleware(s.Bundle)
+	protected := router.NewRoute().Subrouter()
+	protected.Use(auth)
+
+	protected.HandleFunc("/tasks/{id}", s.Handler.Get).Methods(http.MethodGet)
+	protected.HandleFunc("/tasks/{id}/start", s.Handler.Start).Methods(http.MethodPost)
+	protected.HandleFunc("/tasks/{id}/complete", s.Handler.Complete).Methods(http.MethodPost)
+	protected.HandleFunc("/tasks/{id}/due-date", s.Handler.Reschedule).Methods(http.MethodPatch)
+
+	admin := protected.NewRoute().Subrouter()
+	admin.Use(RequireRole(s.Bundle, enum.RoleAdmin))
+	admin.HandleFunc("/accounts", s.Account.Create).Methods(http.MethodPost)
+	admin.HandleFunc("/accounts/{id}/status", s.Account.SetStatus).Methods(http.MethodPatch)
+	admin.HandleFunc("/accounts/{id}", s.Account.Delete).Methods(http.MethodDelete)
+
+	user := protected.NewRoute().Subrouter()
+	user.Use(RequireRole(s.Bundle, enum.RoleUser))
+	user.HandleFunc("/tasks", s.Handler.Create).Methods(http.MethodPost)
+	user.HandleFunc("/profile", s.Profile.Update).Methods(http.MethodPatch)
+
 	router.MethodNotAllowedHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, s.Bundle, errs.New(errs.CodeMethodNotAllowed, errs.KindInvalidInput, nil))
 	})

@@ -57,3 +57,6 @@ other = "email or password is incorrect"
 
 [UNAUTHENTICATED]
 other = "authentication is required"
+
+[FORBIDDEN]
+other = "you are not allowed to perform this action"

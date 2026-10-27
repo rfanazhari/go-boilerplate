@@ -47,6 +47,10 @@ func writeError(w http.ResponseWriter, r *http.Request, bundle *goi18n.Bundle, e
 		status = http.StatusConflict
 	case errs.KindUnavailable:
 		status = http.StatusServiceUnavailable
+	case errs.KindUnauthenticated:
+		status = http.StatusUnauthorized
+	case errs.KindForbidden:
+		status = http.StatusForbidden
 	}
 	if appErr.Code == errs.CodeMethodNotAllowed {
 		status = http.StatusMethodNotAllowed
