@@ -18,7 +18,9 @@ const (
 	CodeInvalidPassword   = "INVALID_PASSWORD"
 	CodeAccountNotFound   = "ACCOUNT_NOT_FOUND"
 	CodeEmailTaken        = "EMAIL_TAKEN"
-	CodeLastAdmin         = "LAST_ADMIN"
+	CodeLastAdmin           = "LAST_ADMIN"
+	CodeInvalidCredentials  = "INVALID_CREDENTIALS"
+	CodeUnauthenticated     = "UNAUTHENTICATED"
 )
 
 const (
@@ -27,6 +29,7 @@ const (
 	KindConflict
 	KindUnavailable
 	KindInternal
+	KindUnauthenticated
 )
 
 type Kind int

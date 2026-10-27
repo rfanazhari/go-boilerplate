@@ -19,6 +19,7 @@ const maxPasswordBytes = 72
 
 type AccountUseCase struct {
 	Accounts repository.AccountRepository
+	Tokens   repository.TokenRepository
 	Hasher   service.PasswordHasher
 	Clock    service.Clock
 	IDs      func() uuid.UUID
