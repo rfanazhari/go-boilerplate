@@ -48,7 +48,7 @@ func view(task *aggregate.Task, now time.Time) dto.TaskView {
 	}
 }
 
-func (u TaskUseCase) Create(ctx context.Context, input dto.CreateTaskInput) (dto.TaskView, error) {
+func (u TaskUseCase) Create(ctx context.Context, actor dto.TaskActor, input dto.CreateTaskInput) (dto.TaskView, error) {
 	now := u.now()
 	// Owner is stamped from the authenticated actor in T6; interim placeholder keeps domain invariants.
 	task, err := aggregate.NewTask(u.nextID(), uuid.MustParse("e0000000-0000-4000-8000-000000000001"), input.Title, input.DueDate, now)
@@ -61,13 +61,13 @@ func (u TaskUseCase) Create(ctx context.Context, input dto.CreateTaskInput) (dto
 	return view(task, now), nil
 }
 
-func (u TaskUseCase) Start(ctx context.Context, id uuid.UUID) (dto.TaskView, error) {
-	return u.mutate(ctx, id, func(task *aggregate.Task, _ time.Time) error {
+func (u TaskUseCase) Start(ctx context.Context, actor dto.TaskActor, id uuid.UUID) (dto.TaskView, error) {
+	return u.mutate(ctx, actor, id, func(task *aggregate.Task, _ time.Time) error {
 		return task.Start()
 	})
 }
 
-func (u TaskUseCase) Complete(ctx context.Context, id uuid.UUID) (dto.TaskView, error) {
+func (u TaskUseCase) Complete(ctx context.Context, actor dto.TaskActor, id uuid.UUID) (dto.TaskView, error) {
 	var result dto.TaskView
 	err := u.Tasks.RunInTransaction(ctx, func(txCtx context.Context) error {
 		now := u.now()
@@ -94,13 +94,13 @@ func (u TaskUseCase) Complete(ctx context.Context, id uuid.UUID) (dto.TaskView, 
 	return result, nil
 }
 
-func (u TaskUseCase) Reschedule(ctx context.Context, input dto.RescheduleTaskInput) (dto.TaskView, error) {
-	return u.mutate(ctx, input.ID, func(task *aggregate.Task, now time.Time) error {
+func (u TaskUseCase) Reschedule(ctx context.Context, actor dto.TaskActor, input dto.RescheduleTaskInput) (dto.TaskView, error) {
+	return u.mutate(ctx, actor, input.ID, func(task *aggregate.Task, now time.Time) error {
 		return task.Reschedule(input.DueDate, now)
 	})
 }
 
-func (u TaskUseCase) Get(ctx context.Context, id uuid.UUID) (dto.TaskView, error) {
+func (u TaskUseCase) Get(ctx context.Context, actor dto.TaskActor, id uuid.UUID) (dto.TaskView, error) {
 	task, err := u.Tasks.Get(ctx, id)
 	if err != nil {
 		return dto.TaskView{}, mapGetError(err)
@@ -108,7 +108,7 @@ func (u TaskUseCase) Get(ctx context.Context, id uuid.UUID) (dto.TaskView, error
 	return view(task, u.now()), nil
 }
 
-func (u TaskUseCase) mutate(ctx context.Context, id uuid.UUID, fn func(*aggregate.Task, time.Time) error) (dto.TaskView, error) {
+func (u TaskUseCase) mutate(ctx context.Context, actor dto.TaskActor, id uuid.UUID, fn func(*aggregate.Task, time.Time) error) (dto.TaskView, error) {
 	now := u.now()
 	task, err := u.Tasks.Get(ctx, id)
 	if err != nil {

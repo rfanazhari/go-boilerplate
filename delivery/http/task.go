@@ -31,6 +31,7 @@ type rescheduleBody struct {
 
 type taskJSON struct {
 	ID          string `json:"id"`
+	OwnerID     string `json:"ownerId"`
 	Title       string `json:"title"`
 	Status      string `json:"status"`
 	DueDate     any    `json:"dueDate"`
@@ -87,6 +88,7 @@ func pathID(r *http.Request) (uuid.UUID, error) {
 func toJSON(view dto.TaskView) taskJSON {
 	return taskJSON{
 		ID:          view.ID.String(),
+		OwnerID:     view.OwnerID.String(),
 		Title:       view.Title,
 		Status:      view.Status,
 		DueDate:     formatTimePtr(view.DueDate),
@@ -107,7 +109,12 @@ func (h TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, h.Bundle, err)
 		return
 	}
-	view, err := h.UseCase.Create(r.Context(), dto.CreateTaskInput{Title: body.Title, DueDate: due})
+	actor, ok := ActorFromContext(r.Context())
+	if !ok {
+		writeError(w, r, h.Bundle, unauthenticated())
+		return
+	}
+	view, err := h.UseCase.Create(r.Context(), dto.TaskActor{ID: actor.ID, Role: actor.Role}, dto.CreateTaskInput{Title: body.Title, DueDate: due})
 	if err != nil {
 		writeError(w, r, h.Bundle, err)
 		return
@@ -116,14 +123,14 @@ func (h TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h TaskHandler) Start(w http.ResponseWriter, r *http.Request) {
-	h.mutate(w, r, func(id uuid.UUID) (dto.TaskView, error) {
-		return h.UseCase.Start(r.Context(), id)
+	h.mutate(w, r, func(actor dto.TaskActor, id uuid.UUID) (dto.TaskView, error) {
+		return h.UseCase.Start(r.Context(), actor, id)
 	})
 }
 
 func (h TaskHandler) Complete(w http.ResponseWriter, r *http.Request) {
-	h.mutate(w, r, func(id uuid.UUID) (dto.TaskView, error) {
-		return h.UseCase.Complete(r.Context(), id)
+	h.mutate(w, r, func(actor dto.TaskActor, id uuid.UUID) (dto.TaskView, error) {
+		return h.UseCase.Complete(r.Context(), actor, id)
 	})
 }
 
@@ -143,7 +150,12 @@ func (h TaskHandler) Reschedule(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, h.Bundle, err)
 		return
 	}
-	view, err := h.UseCase.Reschedule(r.Context(), dto.RescheduleTaskInput{ID: id, DueDate: due})
+	actor, ok := ActorFromContext(r.Context())
+	if !ok {
+		writeError(w, r, h.Bundle, unauthenticated())
+		return
+	}
+	view, err := h.UseCase.Reschedule(r.Context(), dto.TaskActor{ID: actor.ID, Role: actor.Role}, dto.RescheduleTaskInput{ID: id, DueDate: due})
 	if err != nil {
 		writeError(w, r, h.Bundle, err)
 		return
@@ -157,7 +169,12 @@ func (h TaskHandler) Get(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, h.Bundle, err)
 		return
 	}
-	view, err := h.UseCase.Get(r.Context(), id)
+	actor, ok := ActorFromContext(r.Context())
+	if !ok {
+		writeError(w, r, h.Bundle, unauthenticated())
+		return
+	}
+	view, err := h.UseCase.Get(r.Context(), dto.TaskActor{ID: actor.ID, Role: actor.Role}, id)
 	if err != nil {
 		writeError(w, r, h.Bundle, err)
 		return
@@ -165,12 +182,18 @@ func (h TaskHandler) Get(w http.ResponseWriter, r *http.Request) {
 	writeSuccess(w, http.StatusOK, toJSON(view))
 }
 
-func (h TaskHandler) mutate(w http.ResponseWriter, r *http.Request, fn func(uuid.UUID) (dto.TaskView, error)) {
+func (h TaskHandler) mutate(w http.ResponseWriter, r *http.Request, fn func(dto.TaskActor, uuid.UUID) (dto.TaskView, error)) {
 	id, err := pathID(r)
 	if err != nil {
 		writeError(w, r, h.Bundle, err)
 		return
 	}
+	actor, ok := ActorFromContext(r.Context())
+	if !ok {
+		writeError(w, r, h.Bundle, unauthenticated())
+		return
+	}
+	taskActor := dto.TaskActor{ID: actor.ID, Role: actor.Role}
 	if r.ContentLength > 0 {
 		var body map[string]any
 		if err := decodeJSON(r, &body); err != nil {
@@ -182,7 +205,7 @@ func (h TaskHandler) mutate(w http.ResponseWriter, r *http.Request, fn func(uuid
 			return
 		}
 	}
-	view, err := fn(id)
+	view, err := fn(taskActor, id)
 	if err != nil {
 		writeError(w, r, h.Bundle, err)
 		return

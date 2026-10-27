@@ -173,6 +173,28 @@ func TestHTTPAuthRBAC(t *testing.T) {
 		assert.Equal(t, "success", env.Status)
 	})
 
+	t.Run("tasks without token returns 401", func(t *testing.T) {
+		status, env := doJSON(t, handler, http.MethodPost, "/tasks", map[string]string{"title": "x"}, "")
+		assert.Equal(t, http.StatusUnauthorized, status)
+		require.NotNil(t, env.Error)
+		assert.Equal(t, errs.CodeUnauthenticated, env.Error.Code)
+	})
+
+	t.Run("admin cannot create task", func(t *testing.T) {
+		_, loginEnv := doJSON(t, handler, http.MethodPost, "/login", map[string]string{
+			"email":    "admin@example.com",
+			"password": "admin-pass",
+		}, "")
+		var loginData struct {
+			Token string `json:"token"`
+		}
+		require.NoError(t, json.Unmarshal(loginEnv.Data, &loginData))
+		status, env := doJSON(t, handler, http.MethodPost, "/tasks", map[string]string{"title": "x"}, loginData.Token)
+		assert.Equal(t, http.StatusForbidden, status)
+		require.NotNil(t, env.Error)
+		assert.Equal(t, errs.CodeForbidden, env.Error.Code)
+	})
+
 	t.Run("login then bearer on profile", func(t *testing.T) {
 		_, loginEnv := doJSON(t, handler, http.MethodPost, "/login", map[string]string{
 			"email":    "user@example.com",
