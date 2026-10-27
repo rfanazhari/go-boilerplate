@@ -51,3 +51,9 @@ other = "email sudah digunakan"
 
 [LAST_ADMIN]
 other = "operasi ini akan menghapus admin terakhir"
+
+[INVALID_CREDENTIALS]
+other = "email atau kata sandi salah"
+
+[UNAUTHENTICATED]
+other = "autentikasi diperlukan"

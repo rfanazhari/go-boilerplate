@@ -51,3 +51,9 @@ other = "email is already in use"
 
 [LAST_ADMIN]
 other = "this operation would remove the last admin account"
+
+[INVALID_CREDENTIALS]
+other = "email or password is incorrect"
+
+[UNAUTHENTICATED]
+other = "authentication is required"

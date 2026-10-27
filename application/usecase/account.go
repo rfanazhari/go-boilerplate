@@ -109,6 +109,11 @@ func (u AccountUseCase) SetAccountStatus(ctx context.Context, actorID, accountID
 		if err := u.Accounts.Save(txCtx, account); err != nil {
 			return mapAccountSaveError(err)
 		}
+		if parsed == enum.AccountNonActive && u.Tokens != nil {
+			if err := u.Tokens.DeleteByAccountID(txCtx, account.ID()); err != nil {
+				return wrapInfra(err)
+			}
+		}
 		result = accountView(account)
 		return nil
 	})
@@ -130,7 +135,13 @@ func (u AccountUseCase) SoftDeleteAccount(ctx context.Context, actorID, accountI
 		if err := account.SoftDelete(u.now()); err != nil {
 			return err
 		}
-		return mapAccountSaveError(u.Accounts.Save(txCtx, account))
+		if err := mapAccountSaveError(u.Accounts.Save(txCtx, account)); err != nil {
+			return err
+		}
+		if u.Tokens != nil {
+			return wrapInfra(u.Tokens.DeleteByAccountID(txCtx, account.ID()))
+		}
+		return nil
 	})
 }
 

@@ -14,10 +14,9 @@ import (
 
 	"github.com/rfanazhari/go-boilerplate/domain/aggregate"
 	"github.com/rfanazhari/go-boilerplate/domain/enum"
+	"github.com/rfanazhari/go-boilerplate/infrastructure/repository/pgxtx"
 	"github.com/rfanazhari/go-boilerplate/pkg/errs"
 )
-
-type ctxKey struct{}
 
 type querier interface {
 	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
@@ -29,7 +28,7 @@ type Postgres struct {
 }
 
 func (r Postgres) querier(ctx context.Context) querier {
-	if tx, ok := ctx.Value(ctxKey{}).(pgx.Tx); ok {
+	if tx, ok := pgxtx.From(ctx); ok {
 		return tx
 	}
 	return r.Pool
@@ -40,7 +39,7 @@ func (r Postgres) RunInTransaction(ctx context.Context, fn func(ctx context.Cont
 	if err != nil {
 		return errs.New(errs.CodeInternalError, errs.KindInternal, err)
 	}
-	txCtx := context.WithValue(ctx, ctxKey{}, tx)
+	txCtx := pgxtx.With(ctx, tx)
 	if err := fn(txCtx); err != nil {
 		_ = tx.Rollback(ctx)
 		return err
