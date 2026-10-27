@@ -13,6 +13,9 @@ const (
 	CodeTaskFinal         = "TASK_FINAL"
 	CodeEventUnavailable  = "EVENT_UNAVAILABLE"
 	CodeInternalError     = "INTERNAL_ERROR"
+	CodeInvalidRole       = "INVALID_ROLE"
+	CodeInvalidStatus     = "INVALID_STATUS"
+	CodeInvalidPassword   = "INVALID_PASSWORD"
 )
 
 const (
