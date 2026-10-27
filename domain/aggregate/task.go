@@ -20,6 +20,7 @@ var (
 	errCannotStart    = errors.New("task can be started only from todo")
 	errCannotComplete = errors.New("task can be completed only from in progress")
 	errTaskFinal      = errors.New("done task cannot be modified")
+	errMissingOwner   = errors.New("owner id is required")
 )
 
 type Task struct {
@@ -45,6 +46,9 @@ func cloneTime(value *time.Time) *time.Time {
 }
 
 func NewTask(id uuid.UUID, ownerID uuid.UUID, title string, dueDate *time.Time, now time.Time) (*Task, error) {
+	if ownerID == uuid.Nil {
+		return nil, errs.New(errs.CodeValidationFailed, errs.KindInvalidInput, errMissingOwner)
+	}
 	trimmed := strings.TrimSpace(title)
 	if trimmed == "" {
 		return nil, errs.New(errs.CodeInvalidTitle, errs.KindInvalidInput, errEmptyTitle)
