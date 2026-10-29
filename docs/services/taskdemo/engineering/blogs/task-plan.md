@@ -46,11 +46,12 @@
 
 ### Repository
 
-- [ ] **BLOGS-005 — Implement PostgreSQL command persistence** — Infrastructure repository — M
+- [x] **BLOGS-005 — Implement PostgreSQL command persistence** — Infrastructure repository — M
   - Depends: BLOGS-004. Ref: [§3.2](technical-design.md#32-slug-algorithm), [§3.3](technical-design.md#33-atomic-persistence-and-public-visibility), [§4.2](technical-design.md#42-port-and-application-contracts).
   - Deliverables: blogrepository Postgres struct, insert/get/locked-get/update/transaction methods; read methods may land in the next task before wiring the port.
   - DoD: uses pgxtx.With/From, `$1` SQL, row locks and commit/rollback; no update upsert or immutable-column writes. Known unique constraints are distinguished for collision retry; other SQL errors remain internal. No repository constructor. Existing infrastructure tests pass; real DB behavior is verified in BLOGS-015.
   - Commit: `feat(blogs): [BLOGS-005] add transactional postgres writes`.
+  - Execution (2026-10-29): implemented plain Postgres command adapter using pgxtx, insert-only Create, reads including deleted rows, transaction-only FOR UPDATE, mutable-column-only Update, and commit/rollback with panic/cancellation cleanup. Only blogs_pkey/blogs_slug_key unique violations map to identifier conflict. RED: `e78157532e98401a21b4cb2c0ca1f62bf7dd4bfd`; focused command at repository root: `go test ./infrastructure/repository/blogrepository -v -run 'TestPostgres(CreateErrors|GetForUpdateRequiresTransaction)$'`, failed because inert stubs swallowed errors/accepted a lock without a transaction, then passed with implementation. `go test ./...`, `make test`, `make test.arch`, `make test.smoke`, `make lint`, and `make test.security` passed (lint/security required cache access outside sandbox). Security: zero affecting vulnerabilities. Error injection does not establish real SQL behavior; live DB locking/rollback verification remains BLOGS-015. Public/admin reads and full port conformance remain BLOGS-006. GREEN includes this checklist update; unrelated Makefile changes excluded.
 
 - [ ] **BLOGS-006 — Implement PostgreSQL public/admin reads** — Infrastructure repository — M
   - Depends: BLOGS-005. Ref: [§2.2](technical-design.md#22-pagination-and-admin-filter), [§3.3](technical-design.md#33-atomic-persistence-and-public-visibility), [§6](technical-design.md#6-request--response).
