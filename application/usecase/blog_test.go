@@ -24,10 +24,10 @@ import (
 type taggedSanitizer struct{}
 
 func (taggedSanitizer) Sanitize(raw string) string {
-	if raw == "" {
-		return ""
+	if raw == "hello" {
+		return "CLEAN:hello"
 	}
-	return "CLEAN:" + raw
+	return raw
 }
 
 type blogCase struct {
