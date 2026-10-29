@@ -15,7 +15,7 @@
 
 ### Migration
 
-- [ ] **BLOGS-001 — Add blog-only up/down migration** — Infrastructure schema — M
+- [x] **BLOGS-001 — Add blog-only up/down migration** — Infrastructure schema — M
   - Depends: none. Ref: [§3.1](technical-design.md#31-blog-storage).
   - Deliverables: new `20261029000100_create_blogs.up.sql` and `.down.sql`; recheck version availability before choosing the exact filename.
   - DoD: schema includes owner FK without cascade, draft/published check, title bounds, timestamps, global slug uniqueness including deleted rows, and documented indexes. Down removes only blog-owned objects. Existing migrations/data remain intact. Validate application/reversal against a disposable database if available; final automated migration coverage is BLOGS-015. Record deferred live validation if unavailable.
