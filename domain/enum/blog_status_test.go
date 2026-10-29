@@ -1,9 +1,10 @@
 package enum_test
 
 import (
+	"testing"
+
 	"github.com/rfanazhari/go-boilerplate/domain/enum"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestParseBlogStatus(t *testing.T) {

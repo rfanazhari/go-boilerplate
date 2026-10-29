@@ -8,5 +8,10 @@ const (
 )
 
 func ParseBlogStatus(value string) (BlogStatus, bool) {
-	return "", false
+	switch BlogStatus(value) {
+	case BlogDraft, BlogPublished:
+		return BlogStatus(value), true
+	default:
+		return "", false
+	}
 }

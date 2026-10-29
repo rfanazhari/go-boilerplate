@@ -23,11 +23,12 @@
 
 ### Domain
 
-- [ ] **BLOGS-002 — Define blog state and access policy** — Domain/shared errors — M
+- [x] **BLOGS-002 — Define blog state and access policy** — Domain/shared errors — M
   - Depends: BLOGS-001. Ref: [§4.1](technical-design.md#41-domain-model-and-html), [§4.3](technical-design.md#43-authorization-and-disclosure), [§7](technical-design.md#7-error-handling).
   - Deliverables: `domain/enum/blog_status.go`, `domain/service/blog_access.go`, additive blog error constants.
   - DoD: named actor/visibility facts express user-only creation, owner-only edit/publish, owner/admin withdrawal/deletion, live vs deleted access and visibility-before-permission denial. Codes/kinds match §7; task enum/codes/policy unchanged. `go test ./domain/... ./pkg/errs/...` passes existing checks.
   - Commit: `feat(blogs): [BLOGS-002] define blog access policy`.
+  - Execution (2026-10-29): enum, access policy, additive error codes and focused TDD tests implemented. RED: `42c6f0a8d301a816baf17544d31f35ee51bf828f`. Focused tests, domain/errors DoD, `go test ./...`, `make test`, `make test.arch`, `make test.smoke`, and `make lint` passed. Security passed with user-directed `GOTOOLCHAIN=go1.26.10 make test.security` (0 affecting vulnerabilities). The earlier Go 1.26.0 security failure was also reproduced on the pre-T2 baseline; no dependency or toolchain pin changes were needed. GREEN tests and all mandatory checks passed; T2 is Done.
 
 - [ ] **BLOGS-003 — Implement HTML and slug domain policies** — Domain services — L
   - Depends: BLOGS-002. Ref: [§3.2](technical-design.md#32-slug-algorithm), [§4.1](technical-design.md#41-domain-model-and-html).

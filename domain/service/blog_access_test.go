@@ -1,13 +1,14 @@
 package service_test
 
 import (
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/rfanazhari/go-boilerplate/domain/enum"
 	"github.com/rfanazhari/go-boilerplate/domain/service"
 	"github.com/rfanazhari/go-boilerplate/pkg/errs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestBlogPublicVisible(t *testing.T) {
