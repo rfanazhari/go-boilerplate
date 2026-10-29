@@ -60,3 +60,18 @@ other = "autentikasi diperlukan"
 
 [FORBIDDEN]
 other = "anda tidak diizinkan melakukan tindakan ini"
+
+[INVALID_BLOG_TITLE]
+other = "judul harus 10 sampai 200 karakter setelah spasi di tepi dihapus"
+
+[INVALID_BLOG_CONTENT]
+other = "panjang isi berada di luar batas untuk operasi ini"
+
+[INVALID_BLOG_IDENTIFIER]
+other = "pengenal blog bukan UUID yang valid"
+
+[BLOG_NOT_FOUND]
+other = "blog tidak ditemukan"
+
+[BLOG_DELETED]
+other = "blog yang sudah dihapus tidak dapat diubah"

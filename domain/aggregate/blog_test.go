@@ -91,7 +91,7 @@ func TestBlogLifecycle(t *testing.T) {
 
 	tests := []blogLifecycleCase{
 		{
-			name: "publish and unpublish are idempotent and leave updated at",
+			name: "second publish is idempotent and leaves updated at",
 			setup: func(t *testing.T, now time.Time) *aggregate.Blog {
 				blog, err := aggregate.NewBlog(
 					blogID,
@@ -106,12 +106,30 @@ func TestBlogLifecycle(t *testing.T) {
 				return blog
 			},
 			action: func(blog *aggregate.Blog, now time.Time) error {
-				if err := blog.Publish(now); err != nil {
-					return err
-				}
-				if err := blog.Unpublish(now); err != nil {
-					return err
-				}
+				return blog.Publish(now)
+			},
+			assert: func(t *testing.T, blog *aggregate.Blog, now time.Time) {
+				assert.Equal(t, enum.PublicationPublished, blog.Status())
+				assert.Equal(t, later, blog.UpdatedAt())
+			},
+		},
+		{
+			name: "second unpublish is idempotent and leaves updated at",
+			setup: func(t *testing.T, now time.Time) *aggregate.Blog {
+				blog, err := aggregate.NewBlog(
+					blogID,
+					blogOwnerID,
+					mustTitle(t, "Catatan Go"),
+					mustDraftContent(t, strings.Repeat("a", 100)),
+					mustSlug(t, "Catatan Go", "a1b2c3d4"),
+					now,
+				)
+				require.NoError(t, err)
+				require.NoError(t, blog.Publish(later))
+				require.NoError(t, blog.Unpublish(later))
+				return blog
+			},
+			action: func(blog *aggregate.Blog, now time.Time) error {
 				return blog.Unpublish(now)
 			},
 			assert: func(t *testing.T, blog *aggregate.Blog, now time.Time) {
@@ -173,7 +191,7 @@ func TestBlogLifecycle(t *testing.T) {
 				assert.Equal(t, "updated body", blog.Content().HTML())
 				assert.Equal(t, "catatan-go-a1b2c3d4", blog.Slug().String())
 				assert.Equal(t, enum.PublicationDraft, blog.Status())
-				assert.Equal(t, later, blog.UpdatedAt())
+				assert.Equal(t, now, blog.UpdatedAt())
 			},
 		},
 		{

@@ -60,3 +60,18 @@ other = "authentication is required"
 
 [FORBIDDEN]
 other = "you are not allowed to perform this action"
+
+[INVALID_BLOG_TITLE]
+other = "title must be between 10 and 200 characters after trimming whitespace"
+
+[INVALID_BLOG_CONTENT]
+other = "content length is outside the allowed range for this operation"
+
+[INVALID_BLOG_IDENTIFIER]
+other = "blog identifier is not a valid uuid"
+
+[BLOG_NOT_FOUND]
+other = "blog was not found"
+
+[BLOG_DELETED]
+other = "a deleted blog cannot be changed"

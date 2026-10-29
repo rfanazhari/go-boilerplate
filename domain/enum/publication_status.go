@@ -8,5 +8,10 @@ const (
 )
 
 func ParsePublicationStatus(value string) (PublicationStatus, bool) {
-	return "", false
+	switch PublicationStatus(value) {
+	case PublicationDraft, PublicationPublished:
+		return PublicationStatus(value), true
+	default:
+		return "", false
+	}
 }
