@@ -21,8 +21,10 @@ import (
 	"github.com/rfanazhari/go-boilerplate/domain/service"
 	"github.com/rfanazhari/go-boilerplate/infrastructure/i18n"
 	"github.com/rfanazhari/go-boilerplate/infrastructure/repository/accountrepository"
+	"github.com/rfanazhari/go-boilerplate/infrastructure/repository/blogrepository"
 	taskrepository "github.com/rfanazhari/go-boilerplate/infrastructure/repository/taskrepository"
 	"github.com/rfanazhari/go-boilerplate/infrastructure/repository/tokenrepository"
+	infsvc "github.com/rfanazhari/go-boilerplate/infrastructure/service"
 	"github.com/rfanazhari/go-boilerplate/pkg/errs"
 	"github.com/rfanazhari/go-boilerplate/test/testdata"
 	"github.com/rfanazhari/go-boilerplate/translations"
@@ -72,10 +74,17 @@ func testRouter(t *testing.T) (http.Handler, *accountrepository.Memory) {
 		Tasks: &taskrepository.Memory{},
 		Clock: service.SystemClock{},
 	}
+	blogUC := usecase.BlogUseCase{
+		Blogs:     &blogrepository.Memory{Accounts: accounts},
+		Accounts:  accounts,
+		Sanitizer: infsvc.HTMLSanitizer{},
+		Clock:     testdata.NewClock(now),
+	}
 
 	auth := httpapi.Auth{Accounts: accounts, Tokens: tokens}
 	srv := httpapi.Server{
 		Handler: httpapi.TaskHandler{UseCase: taskUC, Bundle: bundle},
+		Blog:    httpapi.BlogHandler{UseCase: blogUC, Bundle: bundle},
 		Login:   httpapi.LoginHandler{UseCase: loginUC, Bundle: bundle},
 		Account: httpapi.AccountHandler{UseCase: accountUC, Bundle: bundle},
 		Profile: httpapi.ProfileHandler{UseCase: accountUC, Bundle: bundle},

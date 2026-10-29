@@ -1,5 +1,11 @@
 # API changelog
 
+## 1.2.0 - 2026-10-30
+
+- Add unauthenticated public blog reads: `GET /blogs`, `GET /blogs/{slug}` (`security: []`).
+- Add authenticated management: `POST /blog-records` (user role, `201`), `GET /blog-records` (admin role), and id-based get/update/publish/unpublish/delete on `/blog-records/{id}`.
+- Create is `201`; other blog successes are `200`. Invalid `/blog-records/{id}` is `400` `INVALID_BLOG_IDENTIFIER`.
+
 ## 1.1.0 - 2026-10-27
 
 - **Breaking:** Task routes require `Authorization: Bearer <opaque token>` except where noted.

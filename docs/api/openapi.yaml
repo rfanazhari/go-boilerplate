@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: taskdemo Task Tracking API
-  version: 1.1.0
-  description: HTTP JSON contract for the Task Tracking reference feature with accounts and Bearer authentication.
+  version: 1.2.0
+  description: HTTP JSON contract for Task Tracking, accounts, and blogs with Bearer authentication.
 servers:
   - url: http://127.0.0.1:8080
 paths:
@@ -37,6 +37,188 @@ paths:
         "401":
           $ref: "#/components/responses/Error"
         "400":
+          $ref: "#/components/responses/Error"
+  /blogs:
+    get:
+      summary: List public published blogs
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Public blog page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessPublicBlogPage"
+        "400":
+          $ref: "#/components/responses/Error"
+  /blogs/{slug}:
+    get:
+      summary: Get a public published blog by slug
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/BlogSlug"
+      responses:
+        "200":
+          description: Public blog detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessPublicBlogDetail"
+        "404":
+          $ref: "#/components/responses/Error"
+  /blog-records:
+    get:
+      summary: List blogs for admin moderation
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/DeletedFilter"
+      responses:
+        "200":
+          description: Admin blog page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessAdminBlogPage"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      summary: Create a draft blog (user role)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBlog"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessManagedBlog"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /blog-records/{id}:
+    get:
+      summary: Get a managed blog by id
+      parameters:
+        - $ref: "#/components/parameters/BlogID"
+      responses:
+        "200":
+          description: Managed blog detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessManagedBlog"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    patch:
+      summary: Revise title and content
+      parameters:
+        - $ref: "#/components/parameters/BlogID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBlog"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessManagedBlog"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+    delete:
+      summary: Soft-delete a blog
+      parameters:
+        - $ref: "#/components/parameters/BlogID"
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEmpty"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /blog-records/{id}/publish:
+    post:
+      summary: Publish a blog
+      parameters:
+        - $ref: "#/components/parameters/BlogID"
+      responses:
+        "200":
+          description: Published
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessManagedBlog"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /blog-records/{id}/unpublish:
+    post:
+      summary: Unpublish a blog
+      parameters:
+        - $ref: "#/components/parameters/BlogID"
+      responses:
+        "200":
+          description: Unpublished
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessManagedBlog"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
           $ref: "#/components/responses/Error"
   /profile:
     patch:
@@ -251,6 +433,35 @@ components:
       schema:
         type: string
         format: uuid
+    BlogID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    BlogSlug:
+      name: slug
+      in: path
+      required: true
+      schema:
+        type: string
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+    PageSize:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+    DeletedFilter:
+      name: deleted
+      in: query
+      schema:
+        type: string
+        enum: [exclude, only, all]
   schemas:
     Login:
       type: object
@@ -391,6 +602,169 @@ components:
           const: success
         data:
           $ref: "#/components/schemas/Task"
+    CreateBlog:
+      type: object
+      additionalProperties: false
+      required: [title]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+    UpdateBlog:
+      type: object
+      additionalProperties: false
+      required: [title, content]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+    PublicBlogItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        title:
+          type: string
+        authorName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    PublicBlogDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        status:
+          const: published
+        authorName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    AdminBlogItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ownerId:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+          enum: [draft, published]
+        authorName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+    ManagedBlog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ownerId:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        status:
+          type: string
+          enum: [draft, published]
+        authorName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+    SuccessPublicBlogPage:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          const: success
+        data:
+          type: object
+          required: [items, page, pageSize, total]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/PublicBlogItem"
+            page:
+              type: integer
+            pageSize:
+              type: integer
+            total:
+              type: integer
+    SuccessPublicBlogDetail:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          const: success
+        data:
+          $ref: "#/components/schemas/PublicBlogDetail"
+    SuccessAdminBlogPage:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          const: success
+        data:
+          type: object
+          required: [items, page, pageSize, total]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/AdminBlogItem"
+            page:
+              type: integer
+            pageSize:
+              type: integer
+            total:
+              type: integer
+    SuccessManagedBlog:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          const: success
+        data:
+          $ref: "#/components/schemas/ManagedBlog"
     SuccessEmpty:
       type: object
       required: [status, data]

@@ -19,6 +19,7 @@ import (
 	"github.com/rfanazhari/go-boilerplate/infrastructure/config"
 	appi18n "github.com/rfanazhari/go-boilerplate/infrastructure/i18n"
 	accountrepository "github.com/rfanazhari/go-boilerplate/infrastructure/repository/accountrepository"
+	"github.com/rfanazhari/go-boilerplate/infrastructure/repository/blogrepository"
 	taskrepository "github.com/rfanazhari/go-boilerplate/infrastructure/repository/taskrepository"
 	tokenrepository "github.com/rfanazhari/go-boilerplate/infrastructure/repository/tokenrepository"
 	"github.com/rfanazhari/go-boilerplate/infrastructure/seed"
@@ -43,10 +44,12 @@ func Start(ctx context.Context, cfg config.Config, logApp *logmanager.Applicatio
 	var tasks repository.TaskRepository = taskrepository.Unavailable{}
 	var accounts repository.AccountRepository = &accountrepository.Memory{}
 	var tokens repository.TokenRepository = &tokenrepository.Memory{}
+	var blogs repository.BlogRepository = blogrepository.Unavailable{}
 	var publisher appevent.CompletionPublisher = infsvc.UnavailablePublisher{}
 	var rabbit infsvc.RabbitPublisher
 	if cfg.InfraOptional {
 		tasks = &taskrepository.Memory{}
+		blogs = &blogrepository.Memory{Accounts: accounts}
 		publisher = &infsvc.RecordingPublisher{}
 	}
 
@@ -70,6 +73,7 @@ func Start(ctx context.Context, cfg config.Config, logApp *logmanager.Applicatio
 			tasks = taskrepository.Postgres{Pool: pool}
 			accounts = accountrepository.Postgres{Pool: pool}
 			tokens = tokenrepository.Postgres{Pool: pool}
+			blogs = blogrepository.Postgres{Pool: pool}
 		}
 	} else if !cfg.InfraOptional {
 		return nil, errors.New("DATABASE_URL is required")
@@ -121,6 +125,12 @@ func Start(ctx context.Context, cfg config.Config, logApp *logmanager.Applicatio
 		Publisher: publisher,
 		Clock:     clock,
 	}
+	blogUC := usecase.BlogUseCase{
+		Blogs:     blogs,
+		Accounts:  accounts,
+		Sanitizer: infsvc.HTMLSanitizer{},
+		Clock:     clock,
+	}
 	accountUC := usecase.AccountUseCase{
 		Accounts: accounts,
 		Tokens:   tokens,
@@ -135,6 +145,7 @@ func Start(ctx context.Context, cfg config.Config, logApp *logmanager.Applicatio
 	auth := httpapi.Auth{Accounts: accounts, Tokens: tokens}
 	handler := httpapi.Server{
 		Handler: httpapi.TaskHandler{UseCase: taskUC, Bundle: bundle},
+		Blog:    httpapi.BlogHandler{UseCase: blogUC, Bundle: bundle},
 		Login:   httpapi.LoginHandler{UseCase: loginUC, Bundle: bundle},
 		Account: httpapi.AccountHandler{UseCase: accountUC, Bundle: bundle},
 		Profile: httpapi.ProfileHandler{UseCase: accountUC, Bundle: bundle},
