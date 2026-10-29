@@ -8,3 +8,5 @@ Capabilities:
 
 - [task-tracking](capabilities/task-tracking.md)
 - [user-management-authentication-task-ownership](capabilities/user-management-authentication-task-ownership.md) (planned)
+
+- [blogs](capabilities/blogs.md) (planned; BR-TASKDEMO-050–054, 060–067, 070–075, 080–084)
