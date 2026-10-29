@@ -30,11 +30,12 @@
   - Commit: `feat(blogs): [BLOGS-002] define blog access policy`.
   - Execution (2026-10-29): enum, access policy, additive error codes and focused TDD tests implemented. RED: `42c6f0a8d301a816baf17544d31f35ee51bf828f`. Focused tests, domain/errors DoD, `go test ./...`, `make test`, `make test.arch`, `make test.smoke`, and `make lint` passed. Security passed with user-directed `GOTOOLCHAIN=go1.26.10 make test.security` (0 affecting vulnerabilities). The earlier Go 1.26.0 security failure was also reproduced on the pre-T2 baseline; no dependency or toolchain pin changes were needed. GREEN tests and all mandatory checks passed; T2 is Done.
 
-- [ ] **BLOGS-003 — Implement HTML and slug domain policies** — Domain services — L
+- [x] **BLOGS-003 — Implement HTML and slug domain policies** — Domain services — L
   - Depends: BLOGS-002. Ref: [§3.2](technical-design.md#32-slug-algorithm), [§4.1](technical-design.md#41-domain-model-and-html).
   - Deliverables: `domain/service/blog_content.go`, `blog_slug.go`; promote the existing x/net module to direct dependency when imported.
   - DoD: single shared policy performs closed allowlist rebuilding, href checks, safe serialization and normalized decoded-text counting; deterministic slug algorithm includes NFKD, fallback, truncation and 12-hex UUID suffix. No HTTP/SQL/outer-layer imports or regex-only sanitizer. Dependency updates do not opportunistically upgrade modules. Existing domain checks pass; adversarial tests follow in BLOGS-012.
   - Commit: `feat(blogs): [BLOGS-003] add content and slug policies`.
+  - Execution (2026-10-29): implemented shared HTML rebuilding/readable-text policy and deterministic NFKD slug policy with focused external-package TDD tests. RED: `c7f5b8d447aee4b5c8dd00ae8004f7fe7ec14970`; command (repository root): `go test ./domain/service -v -run 'Test(ProcessBlogContent|BlogSlug)$'`, failed on inert policy outputs before implementation and passed after implementation. User approved targeted x/net upgrade from v0.60.0 to v0.62.0 to fix GO-2026-6860/GO-2026-6866; no other module versions upgraded. Focused tests, `go test ./...`, `make test`, `make test.arch`, `make test.smoke`, `make lint`, and `make test.security` passed. Security reports 0 affecting vulnerabilities (one required-module finding outside called code). Comprehensive adversarial/reparse coverage remains BLOGS-012; no later task implemented. GREEN is the commit containing this checklist update.
 
 - [ ] **BLOGS-004 — Add blog aggregate and repository port** — Domain — L
   - Depends: BLOGS-003. Ref: [§3.3](technical-design.md#33-atomic-persistence-and-public-visibility), [§4.1](technical-design.md#41-domain-model-and-html), [§4.2](technical-design.md#42-port-and-application-contracts).
