@@ -15,7 +15,10 @@ import (
 
 func startBlogSmokeAPI(t *testing.T) (base string, adminID, userID, strangerID uuid.UUID) {
 	t.Helper()
-	return startSmokeAPI(t), uuid.MustParse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), uuid.MustParse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), uuid.Nil
+	return startSmokeAPI(t),
+		uuid.MustParse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+		uuid.MustParse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+		uuid.MustParse("cccccccc-cccc-cccc-cccc-cccccccccccc")
 }
 
 func blogContentHTML(n int) string {
@@ -109,6 +112,7 @@ func TestBlogAPISmoke(t *testing.T) {
 		again := getJSON(t, ctx, base+"/blogs/"+slug, http.StatusOK)
 		assert.Equal(t, "published", again.Data["status"])
 	})
+	userToken = loginToken(t, ctx, base, "user@example.com", "user-pass")
 
 	draft := postJSON(t, ctx, base+"/blog-records", `{"title":"Catatan Go Dua","content":""}`, http.StatusCreated, userToken)
 	draftID, _ := draft.Data["id"].(string)

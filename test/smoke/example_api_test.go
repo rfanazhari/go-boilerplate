@@ -22,6 +22,7 @@ import (
 	"github.com/rfanazhari/go-boilerplate/domain/service"
 	"github.com/rfanazhari/go-boilerplate/infrastructure/i18n"
 	"github.com/rfanazhari/go-boilerplate/infrastructure/repository/accountrepository"
+	"github.com/rfanazhari/go-boilerplate/infrastructure/repository/blogrepository"
 	taskrepository "github.com/rfanazhari/go-boilerplate/infrastructure/repository/taskrepository"
 	"github.com/rfanazhari/go-boilerplate/infrastructure/repository/tokenrepository"
 	infsvc "github.com/rfanazhari/go-boilerplate/infrastructure/service"
@@ -59,11 +60,20 @@ func startSmokeAPI(t *testing.T) string {
 
 	adminID := uuid.MustParse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
 	userID := uuid.MustParse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
+	strangerID := uuid.MustParse("cccccccc-cccc-cccc-cccc-cccccccccccc")
 	accounts := &accountrepository.Memory{}
 	tokens := &tokenrepository.Memory{}
 	require.NoError(t, accounts.Save(ctx, restoreSmokeAccount(adminID, "admin@example.com", "Admin", "hash:admin-pass", enum.RoleAdmin)))
 	require.NoError(t, accounts.Save(ctx, restoreSmokeAccount(userID, "user@example.com", "User", "hash:user-pass", enum.RoleUser)))
+	require.NoError(t, accounts.Save(ctx, restoreSmokeAccount(strangerID, "stranger@example.com", "Stranger", "hash:stranger-pass", enum.RoleUser)))
 
+	blogs := &blogrepository.Memory{Accounts: accounts}
+	blogUC := usecase.BlogUseCase{
+		Blogs:     blogs,
+		Accounts:  accounts,
+		Sanitizer: infsvc.HTMLSanitizer{},
+		Clock:     testdata.NewClock(testdata.Instant()),
+	}
 	hasher := smokeHasher{}
 	loginUC := usecase.LoginUseCase{Accounts: accounts, Tokens: tokens, Hasher: hasher}
 	accountUC := usecase.AccountUseCase{
@@ -81,6 +91,7 @@ func startSmokeAPI(t *testing.T) string {
 	auth := httpapi.Auth{Accounts: accounts, Tokens: tokens}
 	handler := httpapi.Server{
 		Handler: httpapi.TaskHandler{UseCase: taskUC, Bundle: bundle},
+		Blog:    httpapi.BlogHandler{UseCase: blogUC, Bundle: bundle},
 		Login:   httpapi.LoginHandler{UseCase: loginUC, Bundle: bundle},
 		Account: httpapi.AccountHandler{UseCase: accountUC, Bundle: bundle},
 		Profile: httpapi.ProfileHandler{UseCase: accountUC, Bundle: bundle},

@@ -40,7 +40,7 @@ Mode A. No blog code exists yet. Decisions D1–D5 are active; no task is blocke
       — **Test yang harus lulus:** `go test ./domain/aggregate/ ./domain/enum/ -count=1`. Cover title trim and rune bounds 10/200/201, content plain-text examples from design §3, draft versus published bounds, slug fallback `blog` and immutability, publish/unpublish idempotence, soft-deleted mutation refusal, and `RestoreBlog` loading a short or deleted row without rewriting it. Existing task and account tests still pass.
       — **DoD:** New content can be built only through the sanitizer port plus domain measurement. `INVALID_TITLE` and task status values are not reused. `go test ./domain/aggregate/ -count=1` passes.
 
-- [ ] **T3. Repository: Postgres, memory, and HTML sanitizer** — infrastructure — L
+- [x] **T3. Repository: Postgres, memory, and HTML sanitizer** — infrastructure — L
       — depends: T2 — ref: design §3 §4 §5, decision-log D1 D3 D5
       — **ticket:** `BLOG-T3`
       — **commit:** `BLOG-T3: persist blogs and apply the same public visibility in Postgres and memory`
@@ -73,7 +73,7 @@ Mode A. No blog code exists yet. Decisions D1–D5 are active; no task is blocke
       — **Test yang harus lulus:** `go test ./delivery/http/ -count=1` (existing auth tests still pass; do not add delivery unit tests). Package compiles with the new routes. OpenAPI marks public blog operations `security: []` and leaves global bearer security on management operations. Create is `201`; other blog successes are `200`.
       — **DoD:** Public blog routes are registered on the root router before the authenticated subrouter. Management routes are only under `/blog-records` on that subrouter. `POST /blog-records` uses `RequireRole(user)`. `GET /blog-records` uses `RequireRole(admin)`. Blog UUID parsing returns `INVALID_BLOG_IDENTIFIER`, not `pathID`. Runtime wires Postgres, memory (`INFRA_OPTIONAL`), unavailable, sanitizer, clock, and the handler. No new environment variable.
 
-- [ ] **T6. Verification: smoke, architecture, full test, lint** — test — M
+- [x] **T6. Verification: smoke, architecture, full test, lint** — test — M
       — depends: T5 — ref: design §6 §8, tactical-strategy §5
       — **ticket:** `BLOG-T6`
       — **commit:** `BLOG-T6: prove public visibility, moderation, and existing task routes still hold`
