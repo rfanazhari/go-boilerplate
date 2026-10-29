@@ -9,6 +9,7 @@ packages:
       TaskRepository:
       AccountRepository:
       TokenRepository:
+      BlogRepository:
   github.com/rfanazhari/go-boilerplate/application/event:
     config:
       dir: test/mocks
